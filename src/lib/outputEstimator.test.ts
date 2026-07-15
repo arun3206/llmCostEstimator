@@ -46,14 +46,14 @@ describe("summarization inputs and presets", () => {
   it("returns the approved customer preset", () => {
     expect(getUseCasePreset("customer-call-chat")).toMatchObject({
       outputType: "summary-insights",
-      monthlyInteractions: 10000,
+      monthlyInteractions: 1,
     });
   });
 
   it("returns the approved meeting preset", () => {
     expect(getUseCasePreset("meeting-summary")).toMatchObject({
       outputType: "detailed-summary",
-      monthlyInteractions: 1000,
+      monthlyInteractions: 1,
     });
   });
 });

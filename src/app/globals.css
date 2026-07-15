@@ -159,6 +159,13 @@ h2 {
   letter-spacing: -0.035em;
 }
 
+.section-title {
+  margin-bottom: 10px;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
 h3 {
   margin-bottom: 10px;
 }
@@ -269,6 +276,12 @@ h3 {
   padding: 84px 0;
 }
 
+.calculator-section {
+  padding-top: 48px;
+  background-image: radial-gradient(circle at 1px 1px, #e4e7f2 1px, transparent 0);
+  background-size: 38px 38px;
+}
+
 .section.soft {
   background: #fff;
 }
@@ -322,6 +335,71 @@ h3 {
 
 .field.full {
   grid-column: 1 / -1;
+}
+
+.usage-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.usage-fields-grid.full {
+  grid-column: 1 / -1;
+}
+
+.label-with-info {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.info-tooltip {
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: help;
+}
+
+.info-tooltip:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.24);
+  border-color: var(--primary);
+}
+
+.input-with-suffix {
+  position: relative;
+}
+
+.input-with-suffix input {
+  padding-right: 38px;
+}
+
+.input-with-suffix > span {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+input:disabled {
+  cursor: not-allowed;
+  background: #f0f1f5;
+  color: var(--muted);
+}
+
+.field-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 label {
@@ -539,6 +617,74 @@ button:focus-visible {
   margin: 20px 0;
 }
 
+.primary-token-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0 16px;
+}
+
+.primary-metric-card {
+  background: var(--surface-soft);
+}
+
+.primary-metric-card strong {
+  display: block;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+}
+
+.primary-metric-card small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.result-details {
+  display: grid;
+  gap: 0;
+  margin: 16px 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fbfcff;
+  padding: 4px 14px;
+}
+
+.token-breakdown {
+  display: grid;
+  gap: 0;
+  margin: 0 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-soft);
+  padding: 4px 14px;
+}
+
+.token-breakdown .metric-line {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.token-breakdown .metric-line:last-child {
+  border-bottom: 0;
+}
+
+.token-breakdown .total-line {
+  color: var(--text);
+}
+
+.result-details .metric-line {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.result-details .metric-line:last-child {
+  border-bottom: 0;
+}
+
 .mini-card {
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -738,6 +884,10 @@ button:focus-visible {
   .cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .usage-fields-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 720px) {
@@ -757,6 +907,8 @@ button:focus-visible {
   .form-grid,
   .advanced-grid,
   .option-grid,
+  .usage-fields-grid,
+  .primary-token-grid,
   .result-grid,
   .cards-grid,
   .steps-grid,

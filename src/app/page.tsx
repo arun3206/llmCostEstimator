@@ -23,37 +23,29 @@ const faqJsonLd = {
   })),
 };
 
+const webApplicationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "LLM Cost Estimator",
+  url: "https://llmcostestimator.com",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Web",
+  description:
+    "Estimate token usage and LLM API costs for summarization workloads across OpenAI, Claude, Gemini, and DeepSeek models.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
+
 export default function Home() {
   const updatedAt = MODEL_PRICING[0]?.pricingUpdatedAt ?? "2026-07-15";
   return (
     <main className="page-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webApplicationJsonLd) }} />
       <Header />
-      <section className="hero">
-        <div className="container hero-grid">
-          <div>
-            <span className="eyebrow">Browser-local summarization cost planning</span>
-            <h1>Estimate the Cost of <span style={{ color: "var(--primary)" }}>AI Summarization</span></h1>
-            <p className="lead">Paste a sample transcript, choose the summary output you need, and compare estimated API costs across leading LLM providers.</p>
-            <div className="hero-actions">
-              <a className="button primary" href="#calculator">Estimate My Cost</a>
-              <a className="button secondary" href="#compare">Compare Models</a>
-            </div>
-            <p className="privacy-note">No API key required. Your transcript stays in your browser.</p>
-          </div>
-          <div className="preview-card" aria-label="Example summarization cost estimate">
-            <span className="chip success">Customer summary example</span>
-            <p className="big-money">$42.60</p>
-            <p className="helper">Estimated monthly cost</p>
-            <div className="metric-list">
-              <div className="metric-line"><span>Cost per interaction</span><strong>$0.00426</strong></div>
-              <div className="metric-line"><span>Monthly interactions</span><strong>10,000</strong></div>
-              <div className="metric-line"><span>Input tokens</span><strong>2,500</strong></div>
-              <div className="metric-line"><span>Output type</span><strong>Summary + Insights</strong></div>
-            </div>
-          </div>
-        </div>
-      </section>
       <CostCalculator />
       <UseCases />
       <HowItWorks />
@@ -67,7 +59,7 @@ export default function Home() {
 function Header() {
   return (
     <header className="header"><div className="container header-inner">
-      <a className="brand" href="#"><span className="brand-mark">Σ</span>LLM Cost Estimator</a>
+      <a className="brand" href="#"><span className="brand-mark">AI</span>LLM Cost Estimator</a>
       <nav className="nav" aria-label="Main navigation">
         <a href="#calculator">Calculator</a><a href="#compare">Compare Models</a><a href="#use-cases">Use Cases</a><a href="#methodology">Methodology</a>
       </nav>
@@ -78,9 +70,9 @@ function Header() {
 
 function UseCases() {
   const cases = [
-    { title: "Customer Call / Chat Summarization", description: "Estimate the cost of summarizing support calls, sales calls and customer-agent conversations.", button: "Estimate Customer Summary Cost", href: "/?workload=customer-call-chat&output=summary-insights&interactions=10000#calculator" },
-    { title: "Meeting Summarization", description: "Estimate the cost of producing summaries, decisions and action items from meeting transcripts.", button: "Estimate Meeting Cost", href: "/?workload=meeting-summary&output=detailed-summary&interactions=1000#calculator" },
-    { title: "Custom Workload", description: "Paste any prompt, transcript or content and estimate its LLM processing cost.", button: "Estimate Custom Workload", href: "/?workload=custom&output=summary&interactions=1000#calculator" },
+    { title: "Customer Call / Chat Summarization", description: "Estimate the cost of summarizing support calls, sales calls and customer-agent conversations.", button: "Estimate Customer Summary Cost", href: "/?workload=customer-call-chat&output=summary-insights&interactions=1#calculator" },
+    { title: "Meeting Summarization", description: "Estimate the cost of producing summaries, decisions and action items from meeting transcripts.", button: "Estimate Meeting Cost", href: "/?workload=meeting-summary&output=detailed-summary&interactions=1#calculator" },
+    { title: "Custom Workload", description: "Paste any prompt, transcript or content and estimate its LLM processing cost.", button: "Estimate Custom Workload", href: "/?workload=custom&output=summary&interactions=1#calculator" },
   ];
   return (
     <section className="section soft" id="use-cases"><div className="container">
@@ -109,7 +101,7 @@ function Methodology({ updatedAt }: { updatedAt: string }) {
   return (
     <section className="section soft" id="methodology"><div className="container methodology">
       <span className="chip">Pricing last updated: {updatedAt}</span><h2>How the Estimate Is Calculated</h2>
-      <div className="formula"><span>Input cost = estimated input tokens ÷ 1,000,000 × model input price</span><span>Output cost = estimated output tokens ÷ 1,000,000 × model output price</span><span>Total monthly cost = cost per interaction × monthly interactions</span></div>
+      <div className="formula"><span>Input cost = estimated input tokens / 1,000,000 x model input price</span><span>Output cost = estimated output tokens / 1,000,000 x model output price</span><span>Total monthly cost = cost per interaction x monthly interactions</span></div>
       <p className="lead">Input tokens come from your pasted content. Output tokens are projected from the summary type and input length. Taxes, transcription, storage, and other infrastructure are not included.</p>
     </div></section>
   );

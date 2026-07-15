@@ -23,3 +23,9 @@ export function formatNumber(value: number) {
     maximumFractionDigits: value > 0 && value < 1 ? 2 : 0,
   }).format(value);
 }
+
+export function formatPercentage(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(value);
+}

@@ -40,6 +40,18 @@ describe("calculateCost", () => {
     expect(result.costPerRequest).toBeCloseTo(0.00011);
   });
 
+  it("supports decimal cached-input percentages", () => {
+    const result = calculateCost({
+      inputTokens: 1000,
+      outputTokens: 0,
+      monthlyRequests: 1,
+      cachedInputPercentage: 25.5,
+      model,
+    });
+    expect(result.cachedInputTokens).toBe(255);
+    expect(result.normalInputTokens).toBe(745);
+  });
+
   it("handles zero-token scenario", () => {
     const result = calculateCost({ inputTokens: 0, outputTokens: 0, monthlyRequests: 100, model });
     expect(result.costPerRequest).toBe(0);

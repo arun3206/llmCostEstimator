@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_MODEL_ID, MODEL_PRICING } from "@/data/modelPricing";
 import { getUseCasePreset, USE_CASE_PRESETS } from "@/data/useCasePresets";
 import { calculateCost } from "@/lib/costCalculator";
-import { formatCurrency, formatNumber } from "@/lib/currency";
+import { formatCurrency, formatNumber, formatPercentage } from "@/lib/currency";
 import {
   estimateOutputTokens,
   getTotalInputTokens,
@@ -26,23 +26,34 @@ const workloadCopy: Record<
   custom: {
     label: "Paste your prompt, transcript or content",
     placeholder: "Paste the content that will be sent to the AI model...",
-    usageHelp: "Number of AI requests expected each month",
+    usageHelp: "Number of AI summarization requests expected each month.",
   },
   "customer-call-chat": {
     label: "Paste a customer call or chat transcript",
     placeholder: "Paste a sample customer-agent conversation, support chat or call transcript...",
-    usageHelp: "Number of customer calls or chats summarized each month",
+    usageHelp: "Number of customer calls or chats summarized each month.",
   },
   "meeting-summary": {
     label: "Paste a meeting transcript or meeting notes",
     placeholder: "Paste a sample meeting transcript, discussion or meeting notes...",
-    usageHelp: "Number of meetings summarized each month",
+    usageHelp: "Number of meetings summarized each month.",
   },
 };
 
 function safeNumber(value: string | null, fallback: number, maximum = 1_000_000_000) {
+  if (value === null || value.trim() === "") return fallback;
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? Math.min(parsed, maximum) : fallback;
+}
+
+function wholeNumberInput(value: string) {
+  return value.replace(/[^0-9]/g, "");
+}
+
+function decimalInput(value: string) {
+  const cleaned = value.replace(/[^0-9.]/g, "");
+  const [whole = "", ...fractionParts] = cleaned.split(".");
+  return fractionParts.length ? `${whole}.${fractionParts.join("")}` : whole;
 }
 
 function getInitialQueryState() {
@@ -51,7 +62,7 @@ function getInitialQueryState() {
     provider: "OpenAI" as Provider,
     modelId: DEFAULT_MODEL_ID,
     outputType: "summary" as OutputType,
-    monthlyInteractions: 10000,
+    monthlyInteractions: 1,
     currency: "USD" as Currency,
     systemInstructionTokens: 0,
     cachedInputPercentage: 0,
@@ -91,9 +102,9 @@ export default function CostCalculator() {
   const [modelId, setModelId] = useState(initial.modelId);
   const [text, setText] = useState("");
   const [outputType, setOutputType] = useState<OutputType>(initial.outputType);
-  const [monthlyInteractions, setMonthlyInteractions] = useState(initial.monthlyInteractions);
-  const [cachedInputPercentage, setCachedInputPercentage] = useState(initial.cachedInputPercentage);
-  const [systemInstructionTokens, setSystemInstructionTokens] = useState(initial.systemInstructionTokens);
+  const [monthlyInteractions, setMonthlyInteractions] = useState(String(initial.monthlyInteractions));
+  const [cachedInputPercentage, setCachedInputPercentage] = useState(String(initial.cachedInputPercentage));
+  const [systemInstructionTokens, setSystemInstructionTokens] = useState(String(initial.systemInstructionTokens));
   const [currency, setCurrency] = useState<Currency>(initial.currency);
   const [copyStatus, setCopyStatus] = useState("");
   const [resultEmphasis, setResultEmphasis] = useState(false);
@@ -116,8 +127,13 @@ export default function CostCalculator() {
   );
   const tokenEstimate = useMemo(() => estimateTokens(text), [text]);
   const hasContent = text.trim().length > 0;
+  const safeSystemInstructionTokens = Math.floor(safeNumber(systemInstructionTokens, 0, 10_000_000));
+  const supportsCachedInput = Boolean(model.cachedInputPricePerMillionTokens);
+  const safeCachedInputPercentage = supportsCachedInput
+    ? safeNumber(cachedInputPercentage, 0, 100)
+    : 0;
   const totalInputTokens = hasContent
-    ? getTotalInputTokens(tokenEstimate.tokens, systemInstructionTokens)
+    ? getTotalInputTokens(tokenEstimate.tokens, safeSystemInstructionTokens)
     : 0;
   const remainingContextTokens = model.contextWindowTokens
     ? Math.max(0, model.contextWindowTokens - totalInputTokens)
@@ -128,9 +144,8 @@ export default function CostCalculator() {
     workloadType,
     remainingContextTokens,
   );
-  const safeMonthlyInteractions = Number.isFinite(monthlyInteractions)
-    ? Math.max(0, Math.floor(monthlyInteractions))
-    : 0;
+  const safeMonthlyInteractions = Math.floor(safeNumber(monthlyInteractions, 0));
+  const totalTokensPerInteraction = totalInputTokens + outputTokens;
 
   const estimate = useMemo(
     () =>
@@ -138,10 +153,10 @@ export default function CostCalculator() {
         inputTokens: totalInputTokens,
         outputTokens,
         monthlyRequests: safeMonthlyInteractions,
-        cachedInputPercentage,
+        cachedInputPercentage: safeCachedInputPercentage,
         model,
       }),
-    [cachedInputPercentage, model, outputTokens, safeMonthlyInteractions, totalInputTokens],
+    [model, outputTokens, safeCachedInputPercentage, safeMonthlyInteractions, totalInputTokens],
   );
 
   const comparisonRows = useMemo(() => {
@@ -163,7 +178,7 @@ export default function CostCalculator() {
             inputTokens: totalInputTokens,
             outputTokens: comparableOutputTokens,
             monthlyRequests: safeMonthlyInteractions,
-            cachedInputPercentage,
+            cachedInputPercentage: safeCachedInputPercentage,
             model: item,
           }),
         };
@@ -172,11 +187,11 @@ export default function CostCalculator() {
     const lowest = rows.length ? Math.min(...rows.map((row) => row.estimate.monthlyCost)) : 0;
     return rows.map((row) => ({ ...row, isLowest: row.estimate.monthlyCost === lowest }));
   }, [
-    cachedInputPercentage,
     hasContent,
     outputType,
     safeMonthlyInteractions,
     selectedComparisonIds,
+    safeCachedInputPercentage,
     totalInputTokens,
     workloadType,
   ]);
@@ -189,18 +204,18 @@ export default function CostCalculator() {
       output: outputType,
       interactions: safeMonthlyInteractions,
       currency,
-      systemInstructionTokens: Math.max(0, systemInstructionTokens),
-      cachedInputPercentage: Math.max(0, Math.min(100, cachedInputPercentage)),
+      systemInstructionTokens: safeSystemInstructionTokens,
+      cachedInputPercentage: safeCachedInputPercentage,
     });
     window.history.replaceState(null, "", `${window.location.pathname}?${query}${window.location.hash}`);
   }, [
-    cachedInputPercentage,
     currency,
     model.id,
     outputType,
     provider,
     safeMonthlyInteractions,
-    systemInstructionTokens,
+    safeCachedInputPercentage,
+    safeSystemInstructionTokens,
     workloadType,
   ]);
 
@@ -208,7 +223,7 @@ export default function CostCalculator() {
     setWorkloadType(nextWorkload);
     const preset = getUseCasePreset(nextWorkload);
     setOutputType(preset.outputType);
-    if (nextWorkload !== "custom") setMonthlyInteractions(preset.monthlyInteractions);
+    if (nextWorkload !== "custom") setMonthlyInteractions(String(preset.monthlyInteractions));
   }
 
   function resetCalculator() {
@@ -217,9 +232,9 @@ export default function CostCalculator() {
     setModelId(DEFAULT_MODEL_ID);
     setText("");
     setOutputType("summary");
-    setMonthlyInteractions(10000);
-    setCachedInputPercentage(0);
-    setSystemInstructionTokens(0);
+    setMonthlyInteractions("1");
+    setCachedInputPercentage("0");
+    setSystemInstructionTokens("0");
     setCurrency("USD");
     setCopyStatus("");
   }
@@ -241,12 +256,12 @@ Output: ${output.label}
 Provider: ${model.provider}
 Model: ${model.displayName}
 
-Input tokens per interaction: ${formatNumber(estimate.inputTokens)}
+Total input tokens per interaction: ${formatNumber(estimate.inputTokens)}
 Estimated output tokens per interaction: ${formatNumber(estimate.outputTokens)}
 Monthly interactions: ${formatNumber(safeMonthlyInteractions)}
 
 Cost per interaction: ${formatCurrency(estimate.costPerRequest, "USD")}
-Monthly cost: ${formatCurrency(estimate.monthlyCost, "USD")}
+Estimated monthly cost: ${formatCurrency(estimate.monthlyCost, "USD")}
 Annual cost: ${formatCurrency(estimate.annualCost, "USD")}
 
 Input token count is based on pasted content.
@@ -259,23 +274,15 @@ Estimated using llmcostestimator.com`;
     window.setTimeout(() => setCopyStatus(""), 1800);
   }
 
-  const inputShare = estimate.costPerRequest
-    ? ((estimate.inputCostPerRequest + estimate.cachedInputCostPerRequest) /
-        estimate.costPerRequest) *
-      100
-    : 0;
-  const outputShare = estimate.costPerRequest
-    ? (estimate.outputCostPerRequest / estimate.costPerRequest) * 100
-    : 0;
-
   return (
-    <section className="section" id="calculator">
+    <section className="section calculator-section" id="calculator">
       <div className="container">
         <div className="section-heading">
-          <h2>Calculate Your Summarization Cost</h2>
+          <h1 className="section-title">Calculate Your Summarization Cost</h1>
           <p className="lead">
             Paste a sample transcript, select the summary you need, and estimate your monthly API spend.
           </p>
+          <p className="privacy-note">No API key required. Your transcript stays in your browser.</p>
         </div>
 
         <div className="calculator-grid">
@@ -303,11 +310,10 @@ Estimated using llmcostestimator.com`;
                   value={provider}
                   onChange={(event) => {
                     const nextProvider = event.target.value as Provider;
+                    const nextModel = MODEL_PRICING.find((item) => item.provider === nextProvider);
                     setProvider(nextProvider);
-                    setModelId(
-                      MODEL_PRICING.find((item) => item.provider === nextProvider)?.id ??
-                        DEFAULT_MODEL_ID,
-                    );
+                    setModelId(nextModel?.id ?? DEFAULT_MODEL_ID);
+                    if (!nextModel?.cachedInputPricePerMillionTokens) setCachedInputPercentage("0");
                   }}
                 >
                   {providers.map((item) => (
@@ -319,7 +325,15 @@ Estimated using llmcostestimator.com`;
               </div>
               <div className="field">
                 <label htmlFor="model">Model</label>
-                <select id="model" value={modelId} onChange={(event) => setModelId(event.target.value)}>
+                <select
+                  id="model"
+                  value={modelId}
+                  onChange={(event) => {
+                    const nextModel = MODEL_PRICING.find((item) => item.id === event.target.value);
+                    setModelId(event.target.value);
+                    if (!nextModel?.cachedInputPricePerMillionTokens) setCachedInputPercentage("0");
+                  }}
+                >
                   {providerModels.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.displayName}
@@ -368,44 +382,98 @@ Estimated using llmcostestimator.com`;
                 </p>
               </div>
 
-              <div className="field full">
-                <label htmlFor="monthlyInteractions">Monthly interactions</label>
+              <div className="field">
+                <label htmlFor="monthlyInteractions">Monthly Interactions</label>
                 <input
+                  aria-describedby="monthlyInteractionsHelp monthlyInteractionsError"
+                  aria-invalid={monthlyInteractions !== "" && safeMonthlyInteractions < 1}
                   id="monthlyInteractions"
-                  min={0}
-                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  type="text"
                   value={monthlyInteractions}
-                  onChange={(event) => setMonthlyInteractions(Number(event.target.value))}
+                  onBlur={() => {
+                    if (safeMonthlyInteractions < 1) setMonthlyInteractions("1");
+                  }}
+                  onChange={(event) => setMonthlyInteractions(wholeNumberInput(event.target.value))}
+                  onFocus={(event) => event.currentTarget.select()}
                 />
-                <p className="helper">{workloadCopy[workloadType].usageHelp}</p>
+                <p className="helper" id="monthlyInteractionsHelp">{workloadCopy[workloadType].usageHelp}</p>
+                {monthlyInteractions !== "" && safeMonthlyInteractions < 1 ? (
+                  <p className="field-error" id="monthlyInteractionsError" role="alert">Enter at least 1 interaction.</p>
+                ) : null}
               </div>
 
               <details className="advanced">
-                <summary>Advanced settings</summary>
+                <summary>Advanced Settings</summary>
                 <div className="advanced-grid minimal">
                   <div className="field">
-                    <label htmlFor="systemInstructionTokens">System instruction tokens</label>
+                    <div className="label-with-info">
+                      <label htmlFor="systemInstructionTokens">System Instruction Tokens</label>
+                      <span
+                        aria-label="This includes recurring instructions sent with every transcript, such as the required summary format, extraction fields and response rules."
+                        className="info-tooltip"
+                        role="img"
+                        tabIndex={0}
+                        title="This includes recurring instructions sent with every transcript, such as the required summary format, extraction fields and response rules."
+                      >i</span>
+                    </div>
                     <input
+                      aria-describedby="systemInstructionTokensHelp"
                       id="systemInstructionTokens"
-                      min={0}
-                      type="number"
+                      inputMode="numeric"
+                      min="0"
+                      pattern="[0-9]*"
+                      type="text"
                       value={systemInstructionTokens}
-                      onChange={(event) => setSystemInstructionTokens(Number(event.target.value))}
+                      onChange={(event) => setSystemInstructionTokens(wholeNumberInput(event.target.value))}
+                      onFocus={(event) => event.currentTarget.select()}
                     />
+                    <p className="helper" id="systemInstructionTokensHelp">
+                      Tokens used by the system prompt or summarization instructions in every interaction.
+                    </p>
                   </div>
+
                   <div className="field">
-                    <label htmlFor="cachedInput">Cached input percentage</label>
-                    <input
-                      disabled={!model.cachedInputPricePerMillionTokens}
-                      id="cachedInput"
-                      max={100}
-                      min={0}
-                      type="number"
-                      value={cachedInputPercentage}
-                      onChange={(event) => setCachedInputPercentage(Number(event.target.value))}
-                    />
-                    {!model.cachedInputPricePerMillionTokens ? (
-                      <span className="helper">Cached input pricing is not configured for this model.</span>
+                    <div className="label-with-info">
+                      <label htmlFor="cachedInput">Cached Input Percentage</label>
+                      <span
+                        aria-label="Use this when repeated system instructions or prompt content are eligible for discounted cached-input pricing."
+                        className="info-tooltip"
+                        role="img"
+                        tabIndex={0}
+                        title="Use this when repeated system instructions or prompt content are eligible for discounted cached-input pricing."
+                      >i</span>
+                    </div>
+                    <div className="input-with-suffix">
+                      <input
+                        aria-describedby="cachedInputHelp cachedInputError"
+                        aria-invalid={safeNumber(cachedInputPercentage, 0, Number.MAX_SAFE_INTEGER) > 100}
+                        disabled={!supportsCachedInput}
+                        id="cachedInput"
+                        inputMode="decimal"
+                        max="100"
+                        min="0"
+                        type="text"
+                        value={cachedInputPercentage}
+                        onBlur={() => {
+                          const value = safeNumber(cachedInputPercentage, 0, Number.MAX_SAFE_INTEGER);
+                          if (cachedInputPercentage !== "" && (value > 100 || cachedInputPercentage === ".")) {
+                            setCachedInputPercentage(String(Math.min(100, value)));
+                          }
+                        }}
+                        onChange={(event) => setCachedInputPercentage(decimalInput(event.target.value))}
+                        onFocus={(event) => event.currentTarget.select()}
+                      />
+                      <span aria-hidden="true">%</span>
+                    </div>
+                    <p className="helper" id="cachedInputHelp">
+                      {supportsCachedInput
+                        ? "Percentage of input tokens expected to use provider prompt caching."
+                        : "Cached-input pricing is not available for the selected model."}
+                    </p>
+                    {safeNumber(cachedInputPercentage, 0, Number.MAX_SAFE_INTEGER) > 100 ? (
+                      <p className="field-error" id="cachedInputError" role="alert">Enter a percentage from 0 to 100.</p>
                     ) : null}
                   </div>
                 </div>
@@ -427,81 +495,114 @@ Estimated using llmcostestimator.com`;
             aria-live="polite"
             ref={resultRef}
           >
-            <div className="result-heading-row">
-              <span className="chip success">Estimated Monthly Cost</span>
-              <label className="currency-control">
-                <span>Currency</span>
-                <select value={currency} onChange={(event) => setCurrency(event.target.value as Currency)}>
-                  <option value="USD">USD</option>
-                  <option value="INR">INR</option>
-                </select>
-              </label>
-            </div>
-
             {!hasContent ? (
               <div className="empty-result">
                 <h3>Ready when you are</h3>
-                <p>Paste a sample transcript or content to calculate an estimate.</p>
+                <p>
+                  Paste a sample transcript or content to calculate input tokens, estimated output tokens and monthly cost.
+                </p>
               </div>
             ) : (
               <>
-                <p className="big-money">{formatCurrency(estimate.monthlyCost, currency)}</p>
-                {currency === "USD" ? (
-                  <p className="helper">Approximately {formatCurrency(estimate.monthlyCost, "INR")} per month</p>
-                ) : null}
-
-                <div className="result-grid">
-                  <div className="mini-card">
+                <div className="primary-token-grid">
+                  <div className="mini-card primary-metric-card">
                     <span>Cost per interaction</span>
                     <strong>{formatCurrency(estimate.costPerRequest, currency)}</strong>
+                    <small>Per interaction</small>
                   </div>
-                  <div className="mini-card">
+                  <div className="mini-card primary-metric-card">
+                    <span>Total Tokens</span>
+                    <strong>{formatNumber(totalTokensPerInteraction)}</strong>
+                    <small>Input: {formatNumber(estimate.inputTokens)} tokens</small>
+                    <small>Output: {formatNumber(estimate.outputTokens)} estimated tokens</small>
+                  </div>
+                </div>
+
+                {safeSystemInstructionTokens > 0 || safeCachedInputPercentage > 0 ? (
+                  <div className="token-breakdown" aria-label="Input token breakdown">
+                    {safeSystemInstructionTokens > 0 ? (
+                      <>
+                        <div className="metric-line">
+                          <span>Transcript Tokens</span>
+                          <strong>{formatNumber(tokenEstimate.tokens)}</strong>
+                        </div>
+                        <div className="metric-line">
+                          <span>System Instruction Tokens</span>
+                          <strong>{formatNumber(safeSystemInstructionTokens)}</strong>
+                        </div>
+                        <div className="metric-line total-line">
+                          <span>Total Input Tokens</span>
+                          <strong>{formatNumber(estimate.inputTokens)}</strong>
+                        </div>
+                      </>
+                    ) : null}
+                    {safeCachedInputPercentage > 0 ? (
+                      <>
+                        <div className="metric-line">
+                          <span>Normal Input Tokens</span>
+                          <strong>{formatNumber(estimate.normalInputTokens)}</strong>
+                        </div>
+                        <div className="metric-line">
+                          <span>Cached Input Tokens</span>
+                          <strong>{formatNumber(estimate.cachedInputTokens)}</strong>
+                        </div>
+                        <div className="metric-line total-line">
+                          <span>Cached Input Percentage</span>
+                          <strong>{formatPercentage(safeCachedInputPercentage)}%</strong>
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div className="result-heading-row">
+                  <span className="helper">Calculation details</span>
+                  <label className="currency-control">
+                    <span>Currency</span>
+                    <select value={currency} onChange={(event) => setCurrency(event.target.value as Currency)}>
+                      <option value="USD">USD</option>
+                      <option value="INR">INR</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div className="result-details">
+                  <div className="metric-line">
                     <span>Cost per 1,000 interactions</span>
                     <strong>{formatCurrency(estimate.costPerThousandRequests, currency)}</strong>
                   </div>
-                  <div className="mini-card">
-                    <span>Annual cost</span>
+                  <div className="metric-line">
+                    <span>Monthly estimated cost</span>
+                    <strong>{formatCurrency(estimate.monthlyCost, currency)}</strong>
+                  </div>
+                  <div className="metric-line">
+                    <span>Annual estimated cost</span>
                     <strong>{formatCurrency(estimate.annualCost, currency)}</strong>
                   </div>
-                  <div className="mini-card">
+                  <div className="metric-line">
+                    <span>Monthly interactions</span>
+                    <strong>{formatNumber(safeMonthlyInteractions)}</strong>
+                  </div>
+                  <div className="metric-line">
                     <span>Total monthly tokens</span>
                     <strong>{formatNumber(estimate.totalMonthlyTokens)}</strong>
                   </div>
-                </div>
-
-                <div className="bar-group">
-                  <div>
-                    <div className="bar-top">
-                      <span>Input-token cost per interaction</span>
-                      <strong>
-                        {formatCurrency(
-                          estimate.inputCostPerRequest + estimate.cachedInputCostPerRequest,
-                          currency,
-                        )}
-                      </strong>
+                  <div className="metric-line">
+                    <span>Input-token cost</span>
+                    <strong>{formatCurrency(estimate.inputCostPerRequest, currency)}</strong>
+                  </div>
+                  <div className="metric-line">
+                    <span>Output-token cost</span>
+                    <strong>{formatCurrency(estimate.outputCostPerRequest, currency)}</strong>
+                  </div>
+                  {estimate.cachedInputTokens > 0 ? (
+                    <div className="metric-line">
+                      <span>Cached-input cost</span>
+                      <strong>{formatCurrency(estimate.cachedInputCostPerRequest, currency)}</strong>
                     </div>
-                    <div className="bar"><span style={{ width: `${Math.max(3, inputShare)}%` }} /></div>
-                  </div>
-                  <div>
-                    <div className="bar-top">
-                      <span>Output-token cost per interaction</span>
-                      <strong>{formatCurrency(estimate.outputCostPerRequest, currency)}</strong>
-                    </div>
-                    <div className="bar secondary"><span style={{ width: `${Math.max(3, outputShare)}%` }} /></div>
-                  </div>
-                </div>
-
-                <div className="info-panel">
+                  ) : null}
                   <div className="metric-line">
-                    <span>Input tokens per interaction</span>
-                    <strong>{formatNumber(estimate.inputTokens)}</strong>
-                  </div>
-                  <div className="metric-line">
-                    <span>Estimated output tokens</span>
-                    <strong>{formatNumber(estimate.outputTokens)}</strong>
-                  </div>
-                  <div className="metric-line">
-                    <span>Context window</span>
+                    <span>Context-window status</span>
                     <strong>{estimate.fitsContextWindow ? "Fits" : "Exceeds"}</strong>
                   </div>
                   <div className="metric-line">
@@ -582,10 +683,10 @@ Estimated using llmcostestimator.com`;
             <div className="mobile-only">
               {comparisonRows.map((row) => (
                 <article className="mini-card" key={row.model.id}>
-                  <span>{row.model.provider} · {row.model.displayName}</span>
+                  <span>{row.model.provider} - {row.model.displayName}</span>
                   <strong>{formatCurrency(row.estimate.monthlyCost, currency)} / month</strong>
                   <p className="helper">
-                    {formatCurrency(row.estimate.costPerRequest, currency)} per interaction · {formatCurrency(row.estimate.annualCost, currency)} annually
+                    {formatCurrency(row.estimate.costPerRequest, currency)} per interaction - {formatCurrency(row.estimate.annualCost, currency)} annually
                   </p>
                   {row.isLowest ? <span className="chip success">Lowest estimated cost</span> : null}
                 </article>
