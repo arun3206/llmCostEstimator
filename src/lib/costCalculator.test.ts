@@ -3,28 +3,28 @@ import { calculateCost } from "./costCalculator";
 import { USD_TO_INR, toCurrencyValue } from "./currency";
 import { MODEL_PRICING } from "@/data/modelPricing";
 
-const model = MODEL_PRICING.find((item) => item.id === "gpt-4o-mini")!;
+const model = MODEL_PRICING.find((item) => item.id === "gpt-5.4-nano")!;
 
 describe("calculateCost", () => {
   it("calculates input cost", () => {
     const result = calculateCost({ inputTokens: 1_000_000, outputTokens: 0, monthlyRequests: 1, model });
-    expect(result.inputCostPerRequest).toBeCloseTo(0.15);
+    expect(result.inputCostPerRequest).toBeCloseTo(0.2);
   });
 
   it("calculates output cost", () => {
     const result = calculateCost({ inputTokens: 0, outputTokens: 1_000_000, monthlyRequests: 1, model });
-    expect(result.outputCostPerRequest).toBeCloseTo(0.6);
+    expect(result.outputCostPerRequest).toBeCloseTo(1.25);
   });
 
   it("calculates monthly interaction and annual cost", () => {
     const result = calculateCost({ inputTokens: 2500, outputTokens: 300, monthlyRequests: 10000, model });
-    expect(result.monthlyCost).toBeCloseTo(5.55);
-    expect(result.annualCost).toBeCloseTo(66.6);
+    expect(result.monthlyCost).toBeCloseTo(8.75);
+    expect(result.annualCost).toBeCloseTo(105);
   });
 
   it("calculates cost per 1,000 interactions", () => {
     const result = calculateCost({ inputTokens: 2500, outputTokens: 300, monthlyRequests: 10000, model });
-    expect(result.costPerThousandRequests).toBeCloseTo(0.555);
+    expect(result.costPerThousandRequests).toBeCloseTo(0.875);
   });
 
   it("calculates cached input", () => {
@@ -37,7 +37,7 @@ describe("calculateCost", () => {
     });
     expect(result.normalInputTokens).toBe(500);
     expect(result.cachedInputTokens).toBe(500);
-    expect(result.costPerRequest).toBeCloseTo(0.0001125);
+    expect(result.costPerRequest).toBeCloseTo(0.00011);
   });
 
   it("handles zero-token scenario", () => {
@@ -63,7 +63,7 @@ describe("calculateCost", () => {
 
   it("handles large request volumes", () => {
     const result = calculateCost({ inputTokens: 2500, outputTokens: 300, monthlyRequests: 10_000_000, model });
-    expect(result.monthlyCost).toBeCloseTo(5550);
+    expect(result.monthlyCost).toBeCloseTo(8750);
   });
 
   it("converts currency", () => {
@@ -71,7 +71,20 @@ describe("calculateCost", () => {
   });
 
   it("validates context window fit", () => {
-    const result = calculateCost({ inputTokens: 128000, outputTokens: 1, monthlyRequests: 1, model });
+    const result = calculateCost({ inputTokens: 400000, outputTokens: 1, monthlyRequests: 1, model });
     expect(result.fitsContextWindow).toBe(false);
+  });
+});
+
+describe("current model catalog", () => {
+  it("includes GPT-5.5 and Claude Opus 4.6", () => {
+    expect(MODEL_PRICING.some((item) => item.id === "gpt-5.5")).toBe(true);
+    expect(MODEL_PRICING.some((item) => item.id === "claude-opus-4-6")).toBe(true);
+  });
+
+  it("contains current models for every supported provider", () => {
+    for (const provider of ["OpenAI", "Anthropic", "Google", "DeepSeek"]) {
+      expect(MODEL_PRICING.some((item) => item.provider === provider)).toBe(true);
+    }
   });
 });

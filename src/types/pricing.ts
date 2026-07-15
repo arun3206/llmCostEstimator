@@ -13,4 +13,6 @@ export type ModelPricing = {
   contextWindowTokens?: number;
   tokenizationMethod: TokenizationMethod;
   pricingUpdatedAt: string;
+  pricingSourceUrl?: string;
+  pricingNote?: string;
 };

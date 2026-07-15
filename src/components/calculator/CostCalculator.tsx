@@ -98,11 +98,11 @@ export default function CostCalculator() {
   const [copyStatus, setCopyStatus] = useState("");
   const [resultEmphasis, setResultEmphasis] = useState(false);
   const [selectedComparisonIds, setSelectedComparisonIds] = useState<string[]>([
-    "gpt-4o-mini",
-    "gpt-4o",
-    "claude-3-5-haiku",
-    "gemini-1-5-flash",
-    "deepseek-chat",
+    "gpt-5.4-mini",
+    "gpt-5.5",
+    "claude-opus-4-8",
+    "gemini-3.5-flash",
+    "deepseek-v4-flash",
   ]);
   const resultRef = useRef<HTMLElement>(null);
 
@@ -509,6 +509,8 @@ Estimated using llmcostestimator.com`;
                     <strong>{model.pricingUpdatedAt}</strong>
                   </div>
                 </div>
+
+                {model.pricingNote ? <p className="fine-print">{model.pricingNote}</p> : null}
 
                 <div className="estimate-explanation">
                   <p><strong>Input tokens:</strong> calculated from your pasted content.</p>
