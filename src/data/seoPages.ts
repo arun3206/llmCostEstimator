@@ -95,8 +95,8 @@ export const seoPages: SeoPage[] = [
     eyebrow: "AI chatbot pricing",
     intro:
       "Use this chatbot cost calculator to estimate per-message cost and monthly API spend for AI chatbots and support assistants.",
-    workloadType: "custom",
-    outputType: "summary",
+    workloadType: "ai-chatbot",
+    outputType: "summary-insights",
     faqs: [
       ["How do I estimate chatbot API cost?", "Paste a representative chat prompt or conversation context, choose expected output length and enter monthly message volume."],
       ["Why do chatbot costs vary?", "Costs change with context size, response length, model choice, cached prompts and conversation volume."],

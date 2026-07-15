@@ -30,6 +30,13 @@ export const USE_CASE_PRESETS: UseCasePreset[] = [
     outputType: "detailed-summary",
     monthlyInteractions: 1,
   },
+  {
+    id: "ai-chatbot",
+    name: "AI Chatbot",
+    description: "Estimate support bots, sales bots, and internal assistants.",
+    outputType: "summary-insights",
+    monthlyInteractions: 5000,
+  },
 ];
 
 export function getUseCasePreset(id: WorkloadType) {

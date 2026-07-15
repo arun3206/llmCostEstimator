@@ -35,6 +35,7 @@ const WORKLOAD_RATIO_MULTIPLIER: Record<WorkloadType, number> = {
   custom: 1,
   "customer-call-chat": 1,
   "meeting-summary": 1.08,
+  "ai-chatbot": 0.9,
 };
 
 export function getTotalInputTokens(transcriptTokens: number, systemInstructionTokens: number) {

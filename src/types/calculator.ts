@@ -2,7 +2,7 @@ import type { ModelPricing } from "./pricing";
 
 export type Currency = "USD" | "INR";
 
-export type WorkloadType = "custom" | "customer-call-chat" | "meeting-summary";
+export type WorkloadType = "custom" | "customer-call-chat" | "meeting-summary" | "ai-chatbot";
 
 export type OutputType = "summary" | "summary-insights" | "detailed-summary";
 

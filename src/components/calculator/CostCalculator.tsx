@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CHATBOT_PRESETS, getChatbotPreset } from "@/data/chatbotPresets";
 import { DEFAULT_MODEL_ID, MODEL_PRICING } from "@/data/modelPricing";
 import { getUseCasePreset, USE_CASE_PRESETS } from "@/data/useCasePresets";
 import { calculateCost } from "@/lib/costCalculator";
@@ -16,7 +17,7 @@ import type { Currency, OutputType, WorkloadType } from "@/types/calculator";
 import type { Provider } from "@/types/pricing";
 
 const providers: Provider[] = ["OpenAI", "Anthropic", "Google", "DeepSeek"];
-const workloadTypes: WorkloadType[] = ["custom", "customer-call-chat", "meeting-summary"];
+const workloadTypes: WorkloadType[] = ["custom", "customer-call-chat", "meeting-summary", "ai-chatbot"];
 const outputTypes: OutputType[] = ["summary", "summary-insights", "detailed-summary"];
 
 type CostCalculatorProps = {
@@ -47,6 +48,26 @@ const workloadCopy: Record<
     label: "Paste a meeting transcript or meeting notes",
     placeholder: "Paste a sample meeting transcript, discussion or meeting notes...",
     usageHelp: "Number of meetings summarized each month.",
+  },
+  "ai-chatbot": {
+    label: "Average user message or sample chat",
+    placeholder: "Paste a representative user message or short chatbot conversation...",
+    usageHelp: "Number of chatbot messages expected each month.",
+  },
+};
+
+const chatbotOutputCopy: Record<OutputType, { label: string; description: string }> = {
+  summary: {
+    label: "Short Reply",
+    description: "A brief answer for simple chatbot questions.",
+  },
+  "summary-insights": {
+    label: "Helpful Reply",
+    description: "A balanced chatbot response with useful detail.",
+  },
+  "detailed-summary": {
+    label: "Detailed Reply",
+    description: "A longer answer for complex support or knowledge-base questions.",
   },
 };
 
@@ -135,14 +156,30 @@ export default function CostCalculator({
       }),
     [initialOutputType, initialProvider, initialWorkloadType],
   );
+  const initialChatbotPreset = useMemo(
+    () => (initial.workloadType === "ai-chatbot" ? getChatbotPreset(CHATBOT_PRESETS[0].id) : null),
+    [initial.workloadType],
+  );
   const [workloadType, setWorkloadType] = useState<WorkloadType>(initial.workloadType);
   const [provider, setProvider] = useState<Provider>(initial.provider);
   const [modelId, setModelId] = useState(initial.modelId);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialChatbotPreset?.sampleMessage ?? "");
   const [outputType, setOutputType] = useState<OutputType>(initial.outputType);
-  const [monthlyInteractions, setMonthlyInteractions] = useState(String(initial.monthlyInteractions));
-  const [cachedInputPercentage, setCachedInputPercentage] = useState(String(initial.cachedInputPercentage));
-  const [systemInstructionTokens, setSystemInstructionTokens] = useState(String(initial.systemInstructionTokens));
+  const [monthlyInteractions, setMonthlyInteractions] = useState(
+    String(initialChatbotPreset?.monthlyMessages ?? initial.monthlyInteractions),
+  );
+  const [cachedInputPercentage, setCachedInputPercentage] = useState(
+    String(initialChatbotPreset?.cachedInputPercentage ?? initial.cachedInputPercentage),
+  );
+  const [systemInstructionTokens, setSystemInstructionTokens] = useState(
+    String(initialChatbotPreset?.systemPromptTokens ?? initial.systemInstructionTokens),
+  );
+  const [chatbotPresetId, setChatbotPresetId] = useState(initialChatbotPreset?.id ?? CHATBOT_PRESETS[0].id);
+  const [historyMessages, setHistoryMessages] = useState(String(initialChatbotPreset?.historyMessages ?? 0));
+  const [tokensPerHistoryMessage, setTokensPerHistoryMessage] = useState(
+    String(initialChatbotPreset?.tokensPerHistoryMessage ?? 0),
+  );
+  const [ragContextTokens, setRagContextTokens] = useState(String(initialChatbotPreset?.ragContextTokens ?? 0));
   const [currency, setCurrency] = useState<Currency>(initial.currency);
   const [copyStatus, setCopyStatus] = useState("");
   const [resultEmphasis, setResultEmphasis] = useState(false);
@@ -165,13 +202,25 @@ export default function CostCalculator({
   );
   const tokenEstimate = useMemo(() => estimateTokens(text), [text]);
   const hasContent = text.trim().length > 0;
+  const isChatbotWorkload = workloadType === "ai-chatbot";
   const safeSystemInstructionTokens = Math.floor(safeNumber(systemInstructionTokens, 0, 10_000_000));
+  const safeHistoryMessages = isChatbotWorkload
+    ? Math.floor(safeNumber(historyMessages, 0, 1000))
+    : 0;
+  const safeTokensPerHistoryMessage = isChatbotWorkload
+    ? Math.floor(safeNumber(tokensPerHistoryMessage, 0, 100_000))
+    : 0;
+  const safeRagContextTokens = isChatbotWorkload
+    ? Math.floor(safeNumber(ragContextTokens, 0, 10_000_000))
+    : 0;
+  const conversationHistoryTokens = safeHistoryMessages * safeTokensPerHistoryMessage;
+  const chatbotContextTokens = conversationHistoryTokens + safeRagContextTokens;
   const supportsCachedInput = Boolean(model.cachedInputPricePerMillionTokens);
   const safeCachedInputPercentage = supportsCachedInput
     ? safeNumber(cachedInputPercentage, 0, 100)
     : 0;
   const totalInputTokens = hasContent
-    ? getTotalInputTokens(tokenEstimate.tokens, safeSystemInstructionTokens)
+    ? getTotalInputTokens(tokenEstimate.tokens + chatbotContextTokens, safeSystemInstructionTokens)
     : 0;
   const remainingContextTokens = model.contextWindowTokens
     ? Math.max(0, model.contextWindowTokens - totalInputTokens)
@@ -184,6 +233,11 @@ export default function CostCalculator({
   );
   const safeMonthlyInteractions = Math.floor(safeNumber(monthlyInteractions, 0));
   const totalTokensPerInteraction = totalInputTokens + outputTokens;
+  const unitLabel = isChatbotWorkload ? "message" : "interaction";
+  const unitLabelPlural = isChatbotWorkload ? "messages" : "interactions";
+  const monthlyVolumeLabel = `${formatNumber(safeMonthlyInteractions)} ${
+    safeMonthlyInteractions === 1 ? unitLabel : unitLabelPlural
+  }/month`;
 
   const estimate = useMemo(
     () =>
@@ -234,6 +288,18 @@ export default function CostCalculator({
     workloadType,
   ]);
 
+  function formatCostDifference(diffUsd: number, isCurrentModel = false) {
+    if (isCurrentModel) return "Current model";
+    if (Math.abs(diffUsd) < 0.0000005) return "Same cost";
+    const formatted = formatCurrency(Math.abs(diffUsd), currency);
+    return diffUsd < 0 ? `Save ${formatted}` : `+${formatted}`;
+  }
+
+  function costDifferenceClass(diffUsd: number) {
+    if (Math.abs(diffUsd) < 0.0000005) return "comparison-difference same";
+    return diffUsd < 0 ? "comparison-difference saving" : "comparison-difference extra";
+  }
+
   useEffect(() => {
     const query = encodeShareState({
       provider: provider.toLowerCase(),
@@ -262,6 +328,25 @@ export default function CostCalculator({
     const preset = getUseCasePreset(nextWorkload);
     setOutputType(preset.outputType);
     if (nextWorkload !== "custom") setMonthlyInteractions(String(preset.monthlyInteractions));
+    if (nextWorkload === "ai-chatbot") applyChatbotPreset(CHATBOT_PRESETS[0].id, true);
+    if (nextWorkload !== "ai-chatbot") {
+      setHistoryMessages("0");
+      setTokensPerHistoryMessage("0");
+      setRagContextTokens("0");
+    }
+  }
+
+  function applyChatbotPreset(nextPresetId: string, shouldReplaceText = false) {
+    const preset = getChatbotPreset(nextPresetId);
+    setChatbotPresetId(preset.id);
+    setSystemInstructionTokens(String(preset.systemPromptTokens));
+    setHistoryMessages(String(preset.historyMessages));
+    setTokensPerHistoryMessage(String(preset.tokensPerHistoryMessage));
+    setRagContextTokens(String(preset.ragContextTokens));
+    setCachedInputPercentage(String(preset.cachedInputPercentage));
+    setMonthlyInteractions(String(preset.monthlyMessages));
+    setOutputType(preset.outputType);
+    if (shouldReplaceText || text.trim() === "") setText(preset.sampleMessage);
   }
 
   function resetCalculator() {
@@ -273,6 +358,10 @@ export default function CostCalculator({
     setMonthlyInteractions("1");
     setCachedInputPercentage("0");
     setSystemInstructionTokens("0");
+    setChatbotPresetId(CHATBOT_PRESETS[0].id);
+    setHistoryMessages("0");
+    setTokensPerHistoryMessage("0");
+    setRagContextTokens("0");
     setCurrency("USD");
     setCopyStatus("");
   }
@@ -296,10 +385,10 @@ Model: ${model.displayName}
 
 Total input tokens per interaction: ${formatNumber(estimate.inputTokens)}
 Estimated output tokens per interaction: ${formatNumber(estimate.outputTokens)}
-Monthly interactions: ${formatNumber(safeMonthlyInteractions)}
+Monthly ${unitLabelPlural}: ${formatNumber(safeMonthlyInteractions)}
 
-Cost per interaction: ${formatCurrency(estimate.costPerRequest, "USD")}
-Estimated monthly cost: ${formatCurrency(estimate.monthlyCost, "USD")}
+Cost per ${unitLabel}: ${formatCurrency(estimate.costPerRequest, "USD")}
+Estimated monthly cost (${monthlyVolumeLabel}): ${formatCurrency(estimate.monthlyCost, "USD")}
 Annual cost: ${formatCurrency(estimate.annualCost, "USD")}
 
 Input token count is based on pasted content.
@@ -342,6 +431,30 @@ Estimated using llmcostestimator.com`;
                   ))}
                 </select>
               </div>
+
+              {isChatbotWorkload ? (
+                <div className="field full">
+                  <label>Chatbot preset</label>
+                  <p className="helper">
+                    Choose the closest chatbot type. You can adjust details in Advanced Settings.
+                  </p>
+                  <div className="option-grid chatbot-preset-options">
+                    {CHATBOT_PRESETS.map((preset) => (
+                      <button
+                        aria-pressed={chatbotPresetId === preset.id}
+                        className={`option-card ${chatbotPresetId === preset.id ? "active" : ""}`}
+                        key={preset.id}
+                        onClick={() => applyChatbotPreset(preset.id)}
+                        type="button"
+                      >
+                        <strong>{preset.name}</strong>
+                        <span>{preset.description}</span>
+                        <span>{formatNumber(preset.monthlyMessages)} messages/month</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="field">
                 <label htmlFor="provider">Provider</label>
@@ -403,6 +516,7 @@ Estimated using llmcostestimator.com`;
                 <div className="option-grid output-options">
                   {outputTypes.map((id) => {
                     const option = OUTPUT_ESTIMATION_CONFIG[id];
+                    const displayOption = isChatbotWorkload ? chatbotOutputCopy[id] : option;
                     return (
                       <button
                         aria-pressed={outputType === id}
@@ -411,19 +525,23 @@ Estimated using llmcostestimator.com`;
                         onClick={() => setOutputType(id)}
                         type="button"
                       >
-                        <strong>{option.label}</strong>
-                        <span>{option.description}</span>
+                        <strong>{displayOption.label}</strong>
+                        <span>{displayOption.description}</span>
                       </button>
                     );
                   })}
                 </div>
                 <p className="helper">
-                  Output tokens are estimated based on the selected summary type and input length.
+                  {isChatbotWorkload
+                    ? "Output tokens are estimated based on the selected reply type and input context."
+                    : "Output tokens are estimated based on the selected summary type and input length."}
                 </p>
               </div>
 
               <div className="field">
-                <label htmlFor="monthlyInteractions">Monthly Interactions</label>
+                <label htmlFor="monthlyInteractions">
+                  {isChatbotWorkload ? "Monthly Messages" : "Monthly Interactions"}
+                </label>
                 <input
                   aria-describedby="monthlyInteractionsHelp monthlyInteractionsError"
                   aria-invalid={monthlyInteractions !== "" && safeMonthlyInteractions < 1}
@@ -470,9 +588,58 @@ Estimated using llmcostestimator.com`;
                       onFocus={(event) => event.currentTarget.select()}
                     />
                     <p className="helper" id="systemInstructionTokensHelp">
-                      Tokens used by the system prompt or summarization instructions in every interaction.
+                      Tokens used by the system prompt or recurring instructions in every {unitLabel}.
                     </p>
                   </div>
+
+                  {isChatbotWorkload ? (
+                    <>
+                      <div className="field">
+                        <label htmlFor="historyMessages">Conversation History Messages</label>
+                        <input
+                          id="historyMessages"
+                          inputMode="numeric"
+                          min="0"
+                          pattern="[0-9]*"
+                          type="text"
+                          value={historyMessages}
+                          onChange={(event) => setHistoryMessages(wholeNumberInput(event.target.value))}
+                          onFocus={(event) => event.currentTarget.select()}
+                        />
+                        <p className="helper">Recent chat messages included with each new chatbot request.</p>
+                      </div>
+
+                      <div className="field">
+                        <label htmlFor="tokensPerHistoryMessage">Tokens Per Past Message</label>
+                        <input
+                          id="tokensPerHistoryMessage"
+                          inputMode="numeric"
+                          min="0"
+                          pattern="[0-9]*"
+                          type="text"
+                          value={tokensPerHistoryMessage}
+                          onChange={(event) => setTokensPerHistoryMessage(wholeNumberInput(event.target.value))}
+                          onFocus={(event) => event.currentTarget.select()}
+                        />
+                        <p className="helper">Average token size of each previous user or bot message.</p>
+                      </div>
+
+                      <div className="field">
+                        <label htmlFor="ragContextTokens">RAG Context Tokens</label>
+                        <input
+                          id="ragContextTokens"
+                          inputMode="numeric"
+                          min="0"
+                          pattern="[0-9]*"
+                          type="text"
+                          value={ragContextTokens}
+                          onChange={(event) => setRagContextTokens(wholeNumberInput(event.target.value))}
+                          onFocus={(event) => event.currentTarget.select()}
+                        />
+                        <p className="helper">Optional knowledge-base or document context sent with the chatbot request.</p>
+                      </div>
+                    </>
+                  ) : null}
 
                   <div className="field">
                     <div className="label-with-info">
@@ -546,9 +713,9 @@ Estimated using llmcostestimator.com`;
               <>
                 <div className="primary-token-grid">
                   <div className="mini-card primary-metric-card">
-                    <span>Cost per interaction</span>
+                    <span>Cost per {unitLabel}</span>
                     <strong>{formatCurrency(estimate.costPerRequest, currency)}</strong>
-                    <small>Per interaction</small>
+                    <small>Per {unitLabel}</small>
                   </div>
                   <div className="mini-card primary-metric-card">
                     <span>Total Tokens</span>
@@ -560,16 +727,30 @@ Estimated using llmcostestimator.com`;
 
                 {safeSystemInstructionTokens > 0 || safeCachedInputPercentage > 0 ? (
                   <div className="token-breakdown" aria-label="Input token breakdown">
-                    {safeSystemInstructionTokens > 0 ? (
+                    {safeSystemInstructionTokens > 0 || chatbotContextTokens > 0 ? (
                       <>
                         <div className="metric-line">
-                          <span>Transcript Tokens</span>
+                          <span>{isChatbotWorkload ? "Current Message Tokens" : "Transcript Tokens"}</span>
                           <strong>{formatNumber(tokenEstimate.tokens)}</strong>
                         </div>
-                        <div className="metric-line">
-                          <span>System Instruction Tokens</span>
-                          <strong>{formatNumber(safeSystemInstructionTokens)}</strong>
-                        </div>
+                        {safeSystemInstructionTokens > 0 ? (
+                          <div className="metric-line">
+                            <span>System Instruction Tokens</span>
+                            <strong>{formatNumber(safeSystemInstructionTokens)}</strong>
+                          </div>
+                        ) : null}
+                        {conversationHistoryTokens > 0 ? (
+                          <div className="metric-line">
+                            <span>Conversation History Tokens</span>
+                            <strong>{formatNumber(conversationHistoryTokens)}</strong>
+                          </div>
+                        ) : null}
+                        {safeRagContextTokens > 0 ? (
+                          <div className="metric-line">
+                            <span>RAG Context Tokens</span>
+                            <strong>{formatNumber(safeRagContextTokens)}</strong>
+                          </div>
+                        ) : null}
                         <div className="metric-line total-line">
                           <span>Total Input Tokens</span>
                           <strong>{formatNumber(estimate.inputTokens)}</strong>
@@ -608,11 +789,11 @@ Estimated using llmcostestimator.com`;
 
                 <div className="result-details">
                   <div className="metric-line">
-                    <span>Cost per 1,000 interactions</span>
+                    <span>Cost per 1,000 {unitLabelPlural}</span>
                     <strong>{formatCurrency(estimate.costPerThousandRequests, currency)}</strong>
                   </div>
                   <div className="metric-line">
-                    <span>Monthly estimated cost</span>
+                    <span>Monthly estimated cost ({monthlyVolumeLabel})</span>
                     <strong>{formatCurrency(estimate.monthlyCost, currency)}</strong>
                   </div>
                   <div className="metric-line">
@@ -620,7 +801,7 @@ Estimated using llmcostestimator.com`;
                     <strong>{formatCurrency(estimate.annualCost, currency)}</strong>
                   </div>
                   <div className="metric-line">
-                    <span>Monthly interactions</span>
+                    <span>Monthly {unitLabelPlural}</span>
                     <strong>{formatNumber(safeMonthlyInteractions)}</strong>
                   </div>
                   <div className="metric-line">
@@ -654,8 +835,8 @@ Estimated using llmcostestimator.com`;
                 {model.pricingNote ? <p className="fine-print">{model.pricingNote}</p> : null}
 
                 <div className="estimate-explanation">
-                  <p><strong>Input tokens:</strong> calculated from your pasted content.</p>
-                  <p><strong>Output tokens:</strong> estimated from the selected summary type.</p>
+                  <p><strong>Input tokens:</strong> calculated from your pasted content and configured context.</p>
+                  <p><strong>Output tokens:</strong> estimated from the selected {isChatbotWorkload ? "reply" : "summary"} type.</p>
                 </div>
                 <p className="fine-print">
                   The final output length and provider invoice may differ from this estimate. INR values use an indicative conversion rate.
@@ -672,7 +853,9 @@ Estimated using llmcostestimator.com`;
 
         <section className="section-heading compare-heading" id="compare">
           <h2>Compare the Same Workload Across Models</h2>
-          <p className="lead">Compare cost using the same transcript, output type, and monthly interactions.</p>
+          <p className="lead">
+            Compare model pricing, per-{unitLabel} cost, and monthly difference using the same current calculator values.
+          </p>
           <div className="stats-row model-picks">
             {MODEL_PRICING.map((item) => (
               <label className="chip" key={item.id}>
@@ -700,37 +883,103 @@ Estimated using llmcostestimator.com`;
             <table className="comparison-table">
               <thead>
                 <tr>
-                  <th>Provider</th><th>Model</th><th className="numeric">Input price</th>
-                  <th className="numeric">Output price</th><th className="numeric">Cost/interaction</th>
-                  <th className="numeric">Monthly</th><th className="numeric">Annual</th>
+                  <th>Provider</th>
+                  <th>Model</th>
+                  <th>Model pricing</th>
+                  <th className="numeric">Cost/{unitLabel}</th>
+                  <th className="numeric">Difference/{unitLabel}</th>
+                  <th className="numeric">Monthly cost ({monthlyVolumeLabel})</th>
+                  <th className="numeric">Monthly difference</th>
                 </tr>
               </thead>
               <tbody>
-                {comparisonRows.map((row) => (
-                  <tr className={row.isLowest ? "lowest" : ""} key={row.model.id}>
-                    <td>{row.model.provider}</td>
-                    <td>{row.model.displayName} {row.isLowest ? <span className="chip success">Lowest estimated cost</span> : null}</td>
-                    <td className="numeric">${row.model.inputPricePerMillionTokens}/1M</td>
-                    <td className="numeric">${row.model.outputPricePerMillionTokens}/1M</td>
-                    <td className="numeric">{formatCurrency(row.estimate.costPerRequest, currency)}</td>
-                    <td className="numeric">{formatCurrency(row.estimate.monthlyCost, currency)}</td>
-                    <td className="numeric">{formatCurrency(row.estimate.annualCost, currency)}</td>
-                  </tr>
-                ))}
+                {comparisonRows.map((row, rowIndex) => {
+                  const perRequestDifference = row.estimate.costPerRequest - estimate.costPerRequest;
+                  const monthlyDifference = row.estimate.monthlyCost - estimate.monthlyCost;
+                  const isCurrentModel = row.model.id === model.id;
+                  const samePricingAs = comparisonRows
+                    .slice(0, rowIndex)
+                    .find(
+                      (candidate) =>
+                        candidate.model.provider === row.model.provider &&
+                        candidate.model.inputPricePerMillionTokens === row.model.inputPricePerMillionTokens &&
+                        candidate.model.outputPricePerMillionTokens === row.model.outputPricePerMillionTokens,
+                    );
+                  const rowClassName = [
+                    row.isLowest ? "lowest" : "",
+                    isCurrentModel ? "current-model" : "",
+                  ].filter(Boolean).join(" ");
+
+                  return (
+                    <tr className={rowClassName} key={row.model.id}>
+                      <td>{row.model.provider}</td>
+                      <td>
+                        {row.model.displayName}{" "}
+                        {isCurrentModel ? <span className="chip">Current model</span> : null}
+                        {row.isLowest ? <span className="chip success">Lowest estimated cost</span> : null}
+                      </td>
+                      <td>
+                        <span className="comparison-price">Input ${row.model.inputPricePerMillionTokens}/1M</span>
+                        <span className="comparison-price">Output ${row.model.outputPricePerMillionTokens}/1M</span>
+                        {samePricingAs ? (
+                          <span className="comparison-price-note">
+                            Same pricing as {samePricingAs.model.displayName}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="numeric">{formatCurrency(row.estimate.costPerRequest, currency)}</td>
+                      <td className="numeric">
+                        <span className={costDifferenceClass(perRequestDifference)}>
+                          {formatCostDifference(perRequestDifference, isCurrentModel)}
+                        </span>
+                      </td>
+                      <td className="numeric">{formatCurrency(row.estimate.monthlyCost, currency)}</td>
+                      <td className="numeric">
+                        <span className={costDifferenceClass(monthlyDifference)}>
+                          {formatCostDifference(monthlyDifference, isCurrentModel)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 
             <div className="mobile-only">
-              {comparisonRows.map((row) => (
-                <article className="mini-card" key={row.model.id}>
-                  <span>{row.model.provider} - {row.model.displayName}</span>
-                  <strong>{formatCurrency(row.estimate.monthlyCost, currency)} / month</strong>
-                  <p className="helper">
-                    {formatCurrency(row.estimate.costPerRequest, currency)} per interaction - {formatCurrency(row.estimate.annualCost, currency)} annually
-                  </p>
-                  {row.isLowest ? <span className="chip success">Lowest estimated cost</span> : null}
-                </article>
-              ))}
+              {comparisonRows.map((row, rowIndex) => {
+                const perRequestDifference = row.estimate.costPerRequest - estimate.costPerRequest;
+                const monthlyDifference = row.estimate.monthlyCost - estimate.monthlyCost;
+                const isCurrentModel = row.model.id === model.id;
+                const samePricingAs = comparisonRows
+                  .slice(0, rowIndex)
+                  .find(
+                    (candidate) =>
+                      candidate.model.provider === row.model.provider &&
+                      candidate.model.inputPricePerMillionTokens === row.model.inputPricePerMillionTokens &&
+                      candidate.model.outputPricePerMillionTokens === row.model.outputPricePerMillionTokens,
+                  );
+
+                return (
+                  <article className="mini-card" key={row.model.id}>
+                    <span>{row.model.provider} - {row.model.displayName}</span>
+                    <strong>{formatCurrency(row.estimate.monthlyCost, currency)} / month</strong>
+                    <p className="helper">
+                      Pricing: input ${row.model.inputPricePerMillionTokens}/1M, output ${row.model.outputPricePerMillionTokens}/1M
+                    </p>
+                    {samePricingAs ? (
+                      <p className="helper">Same pricing as {samePricingAs.model.displayName}</p>
+                    ) : null}
+                    <p className="helper">
+                      {formatCurrency(row.estimate.costPerRequest, currency)} per {unitLabel} · {formatCostDifference(perRequestDifference, isCurrentModel)} per {unitLabel}
+                    </p>
+                    <p className="helper">
+                      Monthly difference: <span className={costDifferenceClass(monthlyDifference)}>{formatCostDifference(monthlyDifference, isCurrentModel)}</span>
+                    </p>
+                    {isCurrentModel ? <span className="chip">Current model</span> : null}
+                    {row.isLowest ? <span className="chip success">Lowest estimated cost</span> : null}
+                  </article>
+                );
+              })}
             </div>
           </>
         )}

@@ -484,6 +484,10 @@ button:focus-visible {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.option-grid.chatbot-preset-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .option-card {
   min-height: 72px;
   border: 1px solid var(--border);
@@ -783,6 +787,41 @@ button:focus-visible {
 
 .comparison-table tr.lowest {
   background: #f0fff7;
+}
+
+.comparison-table tr.current-model {
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.comparison-price {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.comparison-price-note {
+  display: inline-flex;
+  margin-top: 6px;
+  color: var(--secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.comparison-difference {
+  font-weight: 700;
+}
+
+.comparison-difference.saving {
+  color: var(--secondary);
+}
+
+.comparison-difference.extra {
+  color: var(--text);
+}
+
+.comparison-difference.same {
+  color: var(--muted);
 }
 
 .cards-grid {

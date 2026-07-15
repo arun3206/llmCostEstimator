@@ -72,6 +72,7 @@ function UseCases() {
   const cases = [
     { title: "Customer Call / Chat Summarization", description: "Estimate the cost of summarizing support calls, sales calls and customer-agent conversations.", button: "Estimate Customer Summary Cost", href: "/?workload=customer-call-chat&output=summary-insights&interactions=1#calculator" },
     { title: "Meeting Summarization", description: "Estimate the cost of producing summaries, decisions and action items from meeting transcripts.", button: "Estimate Meeting Cost", href: "/?workload=meeting-summary&output=detailed-summary&interactions=1#calculator" },
+    { title: "AI Chatbot", description: "Estimate monthly cost for support bots, lead capture bots and internal assistants.", button: "Estimate Chatbot Cost", href: "/chatbot-cost-calculator" },
     { title: "Custom Workload", description: "Paste any prompt, transcript or content and estimate its LLM processing cost.", button: "Estimate Custom Workload", href: "/?workload=custom&output=summary&interactions=1#calculator" },
   ];
   return (

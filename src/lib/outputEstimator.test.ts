@@ -15,6 +15,10 @@ describe("estimateOutputTokens", () => {
     expect(estimateOutputTokens(8000, "detailed-summary", "meeting-summary")).toBe(1500);
   });
 
+  it("estimates chatbot replies with a lighter workload multiplier", () => {
+    expect(estimateOutputTokens(3000, "summary-insights", "ai-chatbot")).toBe(459);
+  });
+
   it("applies minimum token limits", () => {
     expect(estimateOutputTokens(10, "summary", "custom")).toBe(120);
     expect(estimateOutputTokens(10, "summary-insights", "custom")).toBe(250);
@@ -54,6 +58,13 @@ describe("summarization inputs and presets", () => {
     expect(getUseCasePreset("meeting-summary")).toMatchObject({
       outputType: "detailed-summary",
       monthlyInteractions: 1,
+    });
+  });
+
+  it("returns the chatbot preset", () => {
+    expect(getUseCasePreset("ai-chatbot")).toMatchObject({
+      outputType: "summary-insights",
+      monthlyInteractions: 5000,
     });
   });
 });
