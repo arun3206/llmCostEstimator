@@ -120,7 +120,7 @@ function Footer() {
     <footer className="footer"><div className="container footer-grid">
       <div><h3>LLM Cost Estimator</h3><p className="helper">Plan and compare AI summarization costs. Built by ElvaMind.</p><p className="fine-print">Pricing data is for estimation and may differ from provider invoices.</p></div>
       <div><h3>Tools</h3><ul><li>Summarization Calculator</li><li>Token Estimate</li><li>Model Comparison</li></ul></div>
-      <div><h3>Resources</h3><ul><li>Model Pricing</li><li>Methodology</li><li>Privacy Policy</li></ul></div>
+      <div><h3>Resources</h3><ul><li><a href="/openai-cost-calculator">OpenAI Cost Calculator</a></li><li><a href="/claude-cost-calculator">Claude Cost Calculator</a></li><li><a href="/gemini-cost-calculator">Gemini Cost Calculator</a></li></ul></div>
       <div><h3>Company</h3><ul><li>About</li><li>Contact</li><li>ElvaMind</li></ul></div>
     </div></footer>
   );

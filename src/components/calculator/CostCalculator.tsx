@@ -19,6 +19,16 @@ const providers: Provider[] = ["OpenAI", "Anthropic", "Google", "DeepSeek"];
 const workloadTypes: WorkloadType[] = ["custom", "customer-call-chat", "meeting-summary"];
 const outputTypes: OutputType[] = ["summary", "summary-insights", "detailed-summary"];
 
+type CostCalculatorProps = {
+  headingLevel?: "h1" | "h2";
+  headingTitle?: string;
+  headingDescription?: string;
+  privacyNote?: string;
+  initialProvider?: Provider;
+  initialWorkloadType?: WorkloadType;
+  initialOutputType?: OutputType;
+};
+
 const workloadCopy: Record<
   WorkloadType,
   { label: string; placeholder: string; usageHelp: string }
@@ -56,14 +66,26 @@ function decimalInput(value: string) {
   return fractionParts.length ? `${whole}.${fractionParts.join("")}` : whole;
 }
 
-function getInitialQueryState() {
+function getInitialQueryState(defaultOverrides: Partial<{
+  workloadType: WorkloadType;
+  provider: Provider;
+  modelId: string;
+  outputType: OutputType;
+  monthlyInteractions: number;
+  currency: Currency;
+  systemInstructionTokens: number;
+  cachedInputPercentage: number;
+}> = {}) {
   const defaults = {
-    workloadType: "customer-call-chat" as WorkloadType,
-    provider: "OpenAI" as Provider,
-    modelId: DEFAULT_MODEL_ID,
-    outputType: "summary" as OutputType,
+    workloadType: defaultOverrides.workloadType ?? ("customer-call-chat" as WorkloadType),
+    provider: defaultOverrides.provider ?? ("OpenAI" as Provider),
+    modelId:
+      defaultOverrides.modelId ??
+      MODEL_PRICING.find((item) => item.provider === defaultOverrides.provider)?.id ??
+      DEFAULT_MODEL_ID,
+    outputType: defaultOverrides.outputType ?? ("summary" as OutputType),
     monthlyInteractions: 1,
-    currency: "USD" as Currency,
+    currency: defaultOverrides.currency ?? ("USD" as Currency),
     systemInstructionTokens: 0,
     cachedInputPercentage: 0,
   };
@@ -95,8 +117,24 @@ function getInitialQueryState() {
   };
 }
 
-export default function CostCalculator() {
-  const initial = useMemo(() => getInitialQueryState(), []);
+export default function CostCalculator({
+  headingLevel = "h1",
+  headingTitle = "Calculate Your Summarization Cost",
+  headingDescription = "Paste a sample transcript, select the summary you need, and estimate your monthly API spend.",
+  privacyNote = "No API key required. Your transcript stays in your browser.",
+  initialProvider,
+  initialWorkloadType,
+  initialOutputType,
+}: CostCalculatorProps = {}) {
+  const initial = useMemo(
+    () =>
+      getInitialQueryState({
+        provider: initialProvider,
+        workloadType: initialWorkloadType,
+        outputType: initialOutputType,
+      }),
+    [initialOutputType, initialProvider, initialWorkloadType],
+  );
   const [workloadType, setWorkloadType] = useState<WorkloadType>(initial.workloadType);
   const [provider, setProvider] = useState<Provider>(initial.provider);
   const [modelId, setModelId] = useState(initial.modelId);
@@ -278,11 +316,13 @@ Estimated using llmcostestimator.com`;
     <section className="section calculator-section" id="calculator">
       <div className="container">
         <div className="section-heading">
-          <h1 className="section-title">Calculate Your Summarization Cost</h1>
-          <p className="lead">
-            Paste a sample transcript, select the summary you need, and estimate your monthly API spend.
-          </p>
-          <p className="privacy-note">No API key required. Your transcript stays in your browser.</p>
+          {headingLevel === "h1" ? (
+            <h1 className="section-title">{headingTitle}</h1>
+          ) : (
+            <h2>{headingTitle}</h2>
+          )}
+          <p className="lead">{headingDescription}</p>
+          <p className="privacy-note">{privacyNote}</p>
         </div>
 
         <div className="calculator-grid">

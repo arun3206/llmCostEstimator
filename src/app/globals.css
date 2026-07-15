@@ -282,6 +282,16 @@ h3 {
   background-size: 38px 38px;
 }
 
+.seo-intro {
+  padding-bottom: 42px;
+  background-image: radial-gradient(circle at 1px 1px, #e4e7f2 1px, transparent 0);
+  background-size: 38px 38px;
+}
+
+.seo-intro .lead {
+  max-width: 760px;
+}
+
 .section.soft {
   background: #fff;
 }
