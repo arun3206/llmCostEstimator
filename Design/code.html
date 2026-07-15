@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LLM Cost Estimator | Precision AI Financial Planning</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/style.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#f0f3ff",
+                    "on-primary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed-dim": "#ffb695",
+                    "inverse-primary": "#c3c0ff",
+                    "secondary": "#006c49",
+                    "surface": "#f9f9ff",
+                    "on-surface-variant": "#464555",
+                    "on-primary-fixed-variant": "#3323cc",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-secondary-fixed-variant": "#005236",
+                    "primary-fixed": "#e2dfff",
+                    "inverse-surface": "#2a313d",
+                    "on-secondary-fixed": "#002113",
+                    "on-error": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "surface-tint": "#4d44e3",
+                    "surface-container": "#e7eefe",
+                    "surface-bright": "#f9f9ff",
+                    "background": "#f9f9ff",
+                    "outline-variant": "#c7c4d8",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-high": "#e2e8f8",
+                    "on-background": "#151c27",
+                    "on-surface": "#151c27",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#0f0069",
+                    "surface-container-highest": "#dce2f3",
+                    "outline": "#777587",
+                    "on-tertiary-container": "#ffd2be",
+                    "on-primary-container": "#dad7ff",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "tertiary": "#7e3000",
+                    "on-secondary-container": "#00714d",
+                    "on-tertiary-fixed-variant": "#7b2f00",
+                    "surface-variant": "#dce2f3",
+                    "primary-container": "#4f46e5",
+                    "on-tertiary-fixed": "#351000",
+                    "inverse-on-surface": "#ebf1ff",
+                    "secondary-container": "#6cf8bb",
+                    "surface-dim": "#d3daea",
+                    "tertiary-fixed": "#ffdbcc",
+                    "secondary-fixed": "#6ffbbe",
+                    "tertiary-container": "#a44100",
+                    "on-secondary": "#ffffff",
+                    "primary": "#3525cd"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "1.5rem",
+                    "stack-lg": "2rem",
+                    "stack-sm": "0.5rem",
+                    "container-padding": "2rem",
+                    "max-width": "1200px",
+                    "stack-md": "1rem"
+            },
+            "fontFamily": {
+                    "body-lg": ["Geist"],
+                    "headline-lg": ["Geist"],
+                    "label-sm": ["Geist"],
+                    "headline-lg-mobile": ["Geist"],
+                    "body-sm": ["Geist"],
+                    "headline-md": ["Geist"],
+                    "display-lg": ["Geist"],
+                    "label-md": ["Geist"],
+                    "body-md": ["Geist"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Geist', sans-serif; background-color: #F9FAFB; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-header { backdrop-filter: blur(8px); }
+        .card-shadow { box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .grid-bg { background-image: radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0); background-size: 40px 40px; }
+    </style>
+</head>
+<body class="text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md docked full-width top-0 sticky z-50 border-b border-outline-variant/30">
+<div class="flex justify-between items-center h-16 max-w-max-width mx-auto px-gutter">
+<div class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">calculate</span>
+                LLM Cost Estimator
+            </div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-primary font-bold border-b-2 border-primary font-body-md text-body-md py-1" href="#">Calculator</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#compare">Compare Models</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#use-cases">Use Cases</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#methodology">Methodology</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-container transition-all rounded-full">dark_mode</button>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-lg font-label-md text-label-md transition-all active:scale-95 shadow-sm">Start Calculating</button>
+</div>
+</div>
+</header>
+<main>
+<!-- Calculator Section (Now at top) -->
+<section class="pt-12 pb-24 bg-surface grid-bg border-b border-outline-variant/20" id="calculator">
+<div class="max-w-max-width mx-auto px-gutter">
+<div class="mb-10 text-center lg:text-left">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-label-sm font-label-sm mb-6">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+                        Updated for GPT-4o &amp; Claude 3.5 Sonnet
+                    </div>
+<h1 class="font-headline-lg text-headline-lg lg:text-display-lg mb-2">Estimate Your LLM Cost <span class="text-primary">Instantly</span></h1>
+<p class="text-on-surface-variant font-body-md max-w-2xl">Configure your workload to see real-time pricing across major providers. Get precise architectural financial planning for any LLM deployment.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Input -->
+<div class="lg:col-span-8 space-y-8">
+<div class="bg-white rounded-xl border border-outline-variant p-8 card-shadow">
+<!-- Tabs -->
+<div class="flex gap-4 mb-8 border-b border-outline-variant">
+<button class="pb-4 px-2 border-b-2 border-primary text-primary font-label-md text-label-md">Paste Text</button>
+<button class="pb-4 px-2 border-b-2 border-transparent text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md">Manual Config</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+<div class="space-y-2">
+<label class="block font-label-md text-label-md">Use-case preset</label>
+<select class="w-full bg-surface border border-outline-variant rounded-lg p-3 text-body-md focus:ring-2 focus:ring-primary focus:outline-none appearance-none">
+<option>Customer Support Chatbot</option>
+<option>Document Summarization</option>
+<option>Code Generation</option>
+<option>Data Extraction</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="block font-label-md text-label-md">Provider</label>
+<select class="w-full bg-surface border border-outline-variant rounded-lg p-3 text-body-md focus:ring-2 focus:ring-primary focus:outline-none">
+<option>OpenAI (Default)</option>
+<option>Anthropic</option>
+<option>Google Cloud Vertex AI</option>
+<option>Mistral AI</option>
+<option>DeepSeek</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="block font-label-md text-label-md">Model</label>
+<select class="w-full bg-surface border border-outline-variant rounded-lg p-3 text-body-md focus:ring-2 focus:ring-primary focus:outline-none">
+<option>GPT-4o</option>
+<option>GPT-4 Turbo</option>
+<option>GPT-3.5 Turbo</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="block font-label-md text-label-md">Monthly requests</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg p-3 text-body-md focus:ring-2 focus:ring-primary focus:outline-none" type="number" value="10000"/>
+</div>
+</div>
+<div class="space-y-2 mb-8">
+<div class="flex justify-between items-end">
+<label class="block font-label-md text-label-md">Input text sample</label>
+<span class="text-body-sm text-on-surface-variant" id="char-token-display">0 characters | 0 tokens</span>
+</div>
+<textarea class="w-full bg-surface border border-outline-variant rounded-lg p-4 text-body-md focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Paste a representative sample of your typical prompt here to estimate token counts..." rows="6"></textarea>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+<div class="space-y-2">
+<label class="block font-label-md text-label-md">Expected output length</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="bg-surface-container border border-primary text-primary py-2 rounded-lg font-label-md">Short</button>
+<button class="bg-surface border border-outline-variant py-2 rounded-lg font-label-md hover:bg-surface-container-low transition-all">Medium</button>
+<button class="bg-surface border border-outline-variant py-2 rounded-lg font-label-md hover:bg-surface-container-low transition-all">Detailed</button>
+</div>
+</div>
+<div class="flex items-end pb-2">
+<button class="flex items-center gap-2 text-primary font-label-md hover:underline">
+<span class="material-symbols-outlined">settings</span>
+                                        Advanced settings
+                                    </button>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-headline-md text-headline-md shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.99]">
+                                Calculate Cost
+                            </button>
+</div>
+</div>
+<!-- Right Column: Results Sticky -->
+<div class="lg:col-span-4 sticky top-24 space-y-6">
+<div class="bg-white rounded-xl border border-outline-variant p-8 card-shadow">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Estimated Monthly Cost</h3>
+<div class="text-[48px] font-bold text-on-surface leading-none mb-6">$42.60</div>
+<div class="space-y-6 mb-8">
+<div>
+<div class="flex justify-between text-body-sm mb-2">
+<span class="text-on-surface-variant">Input (Prompt)</span>
+<span class="font-medium">$27.69</span>
+</div>
+<div class="h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 65%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-sm mb-2">
+<span class="text-on-surface-variant">Output (Completion)</span>
+<span class="font-medium">$14.91</span>
+</div>
+<div class="h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 35%;"></div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="bg-surface-container-low p-4 rounded-lg">
+<div class="text-on-surface-variant text-[12px] uppercase">Cost per req.</div>
+<div class="text-body-lg font-bold">$0.0042</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg">
+<div class="text-on-surface-variant text-[12px] uppercase">Annual Cost</div>
+<div class="text-body-lg font-bold">$511.20</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg">
+<div class="text-on-surface-variant text-[12px] uppercase">Tokens/Req</div>
+<div class="text-body-lg font-bold">1.2k</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg">
+<div class="text-on-surface-variant text-[12px] uppercase">Req/Sec</div>
+<div class="text-body-lg font-bold">0.004</div>
+</div>
+</div>
+<div class="space-y-3">
+<button class="w-full border border-outline-variant text-on-surface py-3 rounded-lg font-label-md flex items-center justify-center gap-2 hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-[20px]">compare_arrows</span>
+                                    Compare Other Models
+                                </button>
+<button class="w-full bg-surface-container-highest text-on-surface py-3 rounded-lg font-label-md flex items-center justify-center gap-2 hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-[20px]">content_copy</span>
+                                    Copy Estimate
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Value Proposition Section (Moved from Hero) -->
+<section class="py-24 bg-white overflow-hidden">
+<div class="max-w-max-width mx-auto px-gutter grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="space-y-8">
+<h2 class="font-display-lg text-headline-lg lg:text-display-lg leading-tight tracking-tight">
+                        Plan Your LLM Architecture <span class="text-primary">With Confidence</span>
+</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
+                        Stop guessing your monthly cloud bills. Our calculator provides industry-standard tokenization modeling to help you budget for scale before writing a single line of code.
+                    </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<button class="bg-surface border border-outline-variant px-8 py-4 rounded-xl font-label-md text-label-md hover:bg-surface-container-low transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">description</span>
+                            View API Documentation
+                        </button>
+</div>
+</div>
+<div class="relative">
+<!-- Feature Image / Mockup -->
+<div class="bg-surface-container-low p-8 rounded-2xl border border-outline-variant shadow-xl">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">query_stats</span>
+</div>
+<div>
+<h4 class="font-bold">Model Comparison</h4>
+<p class="text-body-sm text-on-surface-variant">Real-time switching between providers</p>
+</div>
+</div>
+<div class="space-y-4">
+<div class="h-4 bg-surface-container rounded-full w-full"></div>
+<div class="h-4 bg-surface-container rounded-full w-3/4"></div>
+<div class="h-4 bg-surface-container rounded-full w-5/6"></div>
+</div>
+</div>
+<!-- Decorative back elements -->
+<div class="absolute -top-6 -right-6 w-32 h-32 bg-primary/10 rounded-full blur-3xl -z-10"></div>
+<div class="absolute -bottom-6 -left-6 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -z-10"></div>
+</div>
+</div>
+</section>
+<!-- Comparison Section -->
+<section class="py-24 bg-surface-container-low border-y border-outline-variant/30" id="compare">
+<div class="max-w-max-width mx-auto px-gutter">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg mb-4">Compare the Same Workload Across Models</h2>
+<p class="text-on-surface-variant font-body-lg max-w-2xl mx-auto">See how your specific parameters translate to costs with other industry-leading providers.</p>
+</div>
+<div class="overflow-hidden border border-outline-variant rounded-2xl shadow-sm bg-white">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low text-on-surface-variant font-label-sm uppercase tracking-wider text-[12px]">
+<tr>
+<th class="p-5 border-b border-outline-variant">Model Provider</th>
+<th class="p-5 border-b border-outline-variant">Model Name</th>
+<th class="p-5 border-b border-outline-variant text-right">Input (1M)</th>
+<th class="p-5 border-b border-outline-variant text-right">Output (1M)</th>
+<th class="p-5 border-b border-outline-variant text-right">Est. Monthly</th>
+</tr>
+</thead>
+<tbody class="text-body-md">
+<tr class="hover:bg-surface-container-low/50 transition-all border-b border-outline-variant/50">
+<td class="p-5 font-medium">OpenAI</td>
+<td class="p-5">GPT-4o</td>
+<td class="p-5 text-right">$5.00</td>
+<td class="p-5 text-right">$15.00</td>
+<td class="p-5 text-right font-bold">$42.60</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-all border-b border-outline-variant/50">
+<td class="p-5 font-medium">Anthropic</td>
+<td class="p-5">Claude 3.5 Sonnet</td>
+<td class="p-5 text-right">$3.00</td>
+<td class="p-5 text-right">$15.00</td>
+<td class="p-5 text-right font-bold">$38.10</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-all border-b border-outline-variant/50">
+<td class="p-5 font-medium">Google</td>
+<td class="p-5">Gemini 1.5 Pro</td>
+<td class="p-5 text-right">$3.50</td>
+<td class="p-5 text-right">$10.50</td>
+<td class="p-5 text-right font-bold">$31.80</td>
+</tr>
+<tr class="bg-secondary-container/10 hover:bg-secondary-container/20 transition-all">
+<td class="p-5 font-medium flex items-center gap-2">
+                                    DeepSeek
+                                    <span class="bg-secondary text-on-secondary text-[10px] px-2 py-0.5 rounded-full font-bold">LOWEST COST</span>
+</td>
+<td class="p-5">DeepSeek-V2</td>
+<td class="p-5 text-right">$0.14</td>
+<td class="p-5 text-right">$0.28</td>
+<td class="p-5 text-right font-bold text-secondary">$1.24</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Use Case Grid -->
+<section class="py-24 bg-surface" id="use-cases">
+<div class="max-w-max-width mx-auto px-gutter">
+<h2 class="font-headline-lg text-headline-lg mb-12 text-center">Optimized for Every Use Case</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+<div class="bg-white p-6 rounded-2xl border border-outline-variant hover:border-primary transition-all group shadow-sm">
+<span class="material-symbols-outlined text-primary mb-4 block text-[32px] group-hover:scale-110 transition-transform">support_agent</span>
+<h4 class="font-bold text-body-lg mb-2">Customer Support</h4>
+<p class="text-on-surface-variant text-body-sm leading-relaxed">High volume, short turns, specific domain constraints.</p>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-outline-variant hover:border-primary transition-all group shadow-sm">
+<span class="material-symbols-outlined text-primary mb-4 block text-[32px] group-hover:scale-110 transition-transform">summarize</span>
+<h4 class="font-bold text-body-lg mb-2">Doc Summarization</h4>
+<p class="text-on-surface-variant text-body-sm leading-relaxed">Large input token requirements, concise outputs.</p>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-outline-variant hover:border-primary transition-all group shadow-sm">
+<span class="material-symbols-outlined text-primary mb-4 block text-[32px] group-hover:scale-110 transition-transform">forum</span>
+<h4 class="font-bold text-body-lg mb-2">AI Chatbot</h4>
+<p class="text-on-surface-variant text-body-sm leading-relaxed">Multi-turn history management and context windowing.</p>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-outline-variant hover:border-primary transition-all group shadow-sm">
+<span class="material-symbols-outlined text-primary mb-4 block text-[32px] group-hover:scale-110 transition-transform">database</span>
+<h4 class="font-bold text-body-lg mb-2">RAG</h4>
+<p class="text-on-surface-variant text-body-sm leading-relaxed">Dense document chunks and complex metadata lookups.</p>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-outline-variant hover:border-primary transition-all group shadow-sm">
+<span class="material-symbols-outlined text-primary mb-4 block text-[32px] group-hover:scale-110 transition-transform">groups</span>
+<h4 class="font-bold text-body-lg mb-2">Meeting Summaries</h4>
+<p class="text-on-surface-variant text-body-sm leading-relaxed">Audio transcript analysis with speaker diarization costs.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Simple 3-Step Precision (How It Works) -->
+<section class="py-24 bg-white">
+<div class="max-w-max-width mx-auto px-gutter text-center">
+<h2 class="font-headline-lg text-headline-lg mb-16">Simple 3-Step Precision</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+<div class="hidden md:block absolute top-1/4 left-0 right-0 h-px bg-outline-variant/50 -z-10"></div>
+<div class="space-y-4">
+<div class="w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center font-bold text-lg mx-auto">1</div>
+<h3 class="font-bold text-headline-md">Add Workload</h3>
+<p class="text-on-surface-variant">Paste your actual prompts or use our industry standard presets.</p>
+</div>
+<div class="space-y-4">
+<div class="w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center font-bold text-lg mx-auto">2</div>
+<h3 class="font-bold text-headline-md">Set Usage</h3>
+<p class="text-on-surface-variant">Define monthly request volumes and expected output lengths.</p>
+</div>
+<div class="space-y-4">
+<div class="w-12 h-12 bg-primary text-on-primary rounded-full flex items-center justify-center font-bold text-lg mx-auto">3</div>
+<h3 class="font-bold text-headline-md">Compare Costs</h3>
+<p class="text-on-surface-variant">Instantly see financial breakdowns across all global providers.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Methodology -->
+<section class="py-24 bg-surface-container-low" id="methodology">
+<div class="max-w-[800px] mx-auto px-gutter text-center">
+<span class="text-primary font-bold tracking-widest text-[12px] uppercase mb-4 block">Architectural Precision</span>
+<h2 class="font-headline-lg text-headline-lg mb-8">Financial Calculation Methodology</h2>
+<div class="bg-white p-10 rounded-3xl border border-outline-variant text-left shadow-sm">
+<div class="mb-8">
+<h4 class="font-bold text-body-lg mb-2">The Standard Formula</h4>
+<div class="bg-surface-container-low p-6 rounded-xl font-mono text-primary text-lg overflow-x-auto whitespace-nowrap">
+                            Total Cost = (Input Tokens × Input Rate) + (Output Tokens × Output Rate)
+                        </div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<h5 class="font-bold mb-2">Input Logic</h5>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                                We calculate input tokens based on the CL100K_Base tokenizer for OpenAI models and standard character-to-token ratios for other providers (approx. 4 chars/token).
+                            </p>
+</div>
+<div>
+<h5 class="font-bold mb-2">Output Logic</h5>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                                Outputs are modeled based on three distribution tiers: Short (50 tokens), Medium (300 tokens), and Detailed (1,200 tokens).
+                            </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="py-24 bg-white">
+<div class="max-w-[800px] mx-auto px-gutter">
+<h2 class="font-headline-lg text-headline-lg mb-12 text-center">Frequently Asked Questions</h2>
+<div class="space-y-4">
+<div class="border border-outline-variant rounded-xl overflow-hidden">
+<button class="w-full flex items-center justify-between p-6 bg-white hover:bg-surface-container-low transition-all text-left" onclick="this.nextElementSibling.classList.toggle('hidden')">
+<span class="font-bold font-body-lg">How accurate are the token counts?</span>
+<span class="material-symbols-outlined">expand_more</span>
+</button>
+<div class="p-6 pt-0 text-on-surface-variant text-body-md border-t border-outline-variant/30 hidden">
+                            Our token counts use the specific tokenizers provided by each AI model lab (e.g., Tiktoken for OpenAI). While exact counts can vary by a fraction of a percentage, our estimates are typically within 99% accuracy of actual billing.
+                        </div>
+</div>
+<div class="border border-outline-variant rounded-xl overflow-hidden">
+<button class="w-full flex items-center justify-between p-6 bg-white hover:bg-surface-container-low transition-all text-left" onclick="this.nextElementSibling.classList.toggle('hidden')">
+<span class="font-bold font-body-lg">Do you store the text I paste for estimation?</span>
+<span class="material-symbols-outlined">expand_more</span>
+</button>
+<div class="p-6 pt-0 text-on-surface-variant text-body-md border-t border-outline-variant/30 hidden">
+                            No. All calculations are performed on the client-side. We do not store, log, or train on any text samples you paste into the calculator.
+                        </div>
+</div>
+<div class="border border-outline-variant rounded-xl overflow-hidden">
+<button class="w-full flex items-center justify-between p-6 bg-white hover:bg-surface-container-low transition-all text-left" onclick="this.nextElementSibling.classList.toggle('hidden')">
+<span class="font-bold font-body-lg">Are bulk discounts included?</span>
+<span class="material-symbols-outlined">expand_more</span>
+</button>
+<div class="p-6 pt-0 text-on-surface-variant text-body-md border-t border-outline-variant/30 hidden">
+                            Currently, we show public "pay-as-you-go" pricing. For enterprise-scale volume discounts, please refer to the specific provider's sales documentation.
+                        </div>
+</div>
+<div class="border border-outline-variant rounded-xl overflow-hidden">
+<button class="w-full flex items-center justify-between p-6 bg-white hover:bg-surface-container-low transition-all text-left" onclick="this.nextElementSibling.classList.toggle('hidden')">
+<span class="font-bold font-body-lg">How often is pricing updated?</span>
+<span class="material-symbols-outlined">expand_more</span>
+</button>
+<div class="p-6 pt-0 text-on-surface-variant text-body-md border-t border-outline-variant/30 hidden">
+                            Pricing is monitored daily. If a provider changes their rates, our system typically updates within 4 hours.
+                        </div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest dark:bg-surface-container-low border-t border-outline-variant/50">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-stack-lg max-w-max-width mx-auto py-stack-lg px-gutter">
+<div class="space-y-4">
+<div class="font-headline-md text-headline-md font-bold text-on-surface">LLM Cost Estimator</div>
+<p class="text-on-surface-variant font-body-sm leading-relaxed">
+                    © 2024 LLM Cost Estimator. Architectural precision in AI financial planning.
+                </p>
+<div class="flex gap-4">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">public</span>
+</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">code</span>
+</a>
+</div>
+</div>
+<div class="space-y-4">
+<h5 class="font-bold font-body-md">Product</h5>
+<ul class="space-y-2">
+<li><a class="text-on-surface-variant hover:text-primary font-body-sm transition-colors" href="#">Calculator</a></li>
+<li><a class="text-on-surface-variant hover:text-primary font-body-sm transition-colors" href="#">Compare Models</a></li>
+<li><a class="text-on-surface-variant hover:text-primary font-body-sm transition-colors" href="#">Use Cases</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<h5 class="font-bold font-body-md">Resources</h5>
+<ul class="space-y-2">
+<li><a class="text-on-surface-variant hover:text-primary font-body-sm transition-colors" href="#">Methodology</a></li>
+<li><a class="text-on-surface-variant hover:text-primary font-body-sm transition-colors" href="#">API Documentation</a></li>
+<li><a class="text-on-surface-variant hover:text-primary font-body-sm transition-colors" href="#">Community</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<h5 class="font-bold font-body-md">Legal</h5>
+<ul class="space-y-2">
+<li><a class="text-on-surface-variant hover:text-primary font-body-sm transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="text-on-surface-variant hover:text-primary font-body-sm transition-colors" href="#">Terms of Service</a></li>
+</ul>
+</div>
+</div>
+</footer>
+<script>
+        // Simple interactivity for the calculator
+        const textarea = document.querySelector('textarea');
+        const tokenCounter = document.getElementById('char-token-display');
+        
+        textarea.addEventListener('input', (e) => {
+            const charCount = e.target.value.length;
+            const tokenCount = Math.ceil(charCount / 4);
+            tokenCounter.textContent = `${charCount.toLocaleString()} characters | ${tokenCount.toLocaleString()} tokens`;
+        });
+    </script>
+</body></html>
