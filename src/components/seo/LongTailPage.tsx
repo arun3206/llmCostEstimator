@@ -37,7 +37,7 @@ export default function LongTailPage({ page }: { page: SeoPage }) {
       <header className="header"><div className="container header-inner">
         <Link className="brand" href={routes.home}><span className="brand-mark">AI</span>LLM Cost Estimator</Link>
         <nav className="nav" aria-label="Main navigation">
-          <Link href="/#calculator">Calculator</Link><Link href="/#compare">Compare Models</Link><Link href="/#use-cases">Use Cases</Link><Link href="/#methodology">Methodology</Link>
+          <Link href="/#calculator">Calculator</Link><Link href="/#compare">Compare Models</Link><Link href="/#use-cases">Use Cases</Link><Link href="/blog">Blog</Link><Link href="/#methodology">Methodology</Link>
         </nav>
         <div className="header-actions"><span className="chip">USD / INR</span><a className="button primary" href="#calculator">Start Calculating</a></div>
       </div></header>
@@ -94,7 +94,7 @@ export default function LongTailPage({ page }: { page: SeoPage }) {
         <div><h3>LLM Cost Estimator</h3><p className="helper">Plan and compare AI API costs. Built by ElvaMind.</p><p className="fine-print">Pricing data is for estimation and may differ from provider invoices.</p></div>
         <div><h3>Tools</h3><ul><li><Link href={routes.home}>Main Calculator</Link></li><li><Link href={routes.summarization}>Summarization Cost</Link></li><li><Link href={routes.chatbot}>Chatbot Cost</Link></li></ul></div>
         <div><h3>Providers</h3><ul><li><Link href={routes.openai}>OpenAI</Link></li><li><Link href={routes.claude}>Claude</Link></li><li><Link href={routes.gemini}>Gemini</Link></li></ul></div>
-        <div><h3>Company</h3><ul><li>About</li><li>Contact</li><li>ElvaMind</li></ul></div>
+        <div><h3>Resources</h3><ul><li><Link href="/blog">LLM Cost Blog</Link></li><li><Link href="/blog/llm-token-pricing-explained">Token Pricing Guide</Link></li><li><Link href="/blog/reduce-llm-api-costs">Reduce LLM Costs</Link></li></ul></div>
       </div></footer>
     </main>
   );
