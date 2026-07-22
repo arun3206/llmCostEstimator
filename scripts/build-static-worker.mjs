@@ -5,6 +5,7 @@ const root = process.cwd();
 const outDir = path.join(root, "out");
 const distDir = path.join(root, "dist");
 const serverDir = path.join(distDir, "server");
+const hostingDir = path.join(distDir, ".openai");
 
 const mimeTypes = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -51,6 +52,7 @@ function routeForFile(filePath) {
 
 await rm(distDir, { recursive: true, force: true });
 await mkdir(serverDir, { recursive: true });
+await mkdir(hostingDir, { recursive: true });
 
 const files = await listFiles(outDir);
 const assets = Object.fromEntries(
@@ -105,4 +107,8 @@ export default {
 `;
 
 await writeFile(path.join(serverDir, "index.js"), worker);
+await writeFile(
+  path.join(hostingDir, "hosting.json"),
+  await readFile(path.join(root, ".openai", "hosting.json"), "utf8"),
+);
 console.log(`Created static worker with ${files.length} assets.`);
