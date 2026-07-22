@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { blogPosts } from "@/data/blogPosts";
 import { seoPages } from "@/data/seoPages";
 
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://llmcostestimator.com";
   const lastModified = new Date("2026-07-16");
