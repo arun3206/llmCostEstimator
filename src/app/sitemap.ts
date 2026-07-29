@@ -6,7 +6,7 @@ export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://llmcostestimator.com";
-  const lastModified = new Date("2026-07-16");
+  const lastModified = new Date("2026-07-29");
 
   return [
     {

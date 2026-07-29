@@ -8,6 +8,20 @@ export const metadata: Metadata = {
   description:
     "Practical guides for estimating OpenAI, Claude, Gemini, DeepSeek and chatbot API costs with real pricing examples.",
   alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "LLM Cost Blog - API Pricing Guides and Examples",
+    description:
+      "Practical guides for estimating OpenAI, Claude, Gemini, DeepSeek and chatbot API costs with real pricing examples.",
+    url: "https://llmcostestimator.com/blog",
+    siteName: "LLM Cost Estimator",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LLM Cost Blog - API Pricing Guides and Examples",
+    description:
+      "Practical guides for estimating OpenAI, Claude, Gemini, DeepSeek and chatbot API costs with real pricing examples.",
+  },
 };
 
 const blogJsonLd = {

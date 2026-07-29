@@ -704,7 +704,7 @@ Estimated using llmcostestimator.com`;
           >
             {!hasContent ? (
               <div className="empty-result">
-                <h3>Ready when you are</h3>
+                <p className="empty-result-title">Ready when you are</p>
                 <p>
                   Paste a sample transcript or content to calculate input tokens, estimated output tokens and monthly cost.
                 </p>

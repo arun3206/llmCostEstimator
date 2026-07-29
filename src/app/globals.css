@@ -602,8 +602,12 @@ button:focus-visible {
   margin-top: 22px;
 }
 
-.empty-result h3 {
+.empty-result-title {
   color: var(--text);
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 8px;
 }
 
 .estimate-explanation {
