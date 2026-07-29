@@ -1007,6 +1007,10 @@ button:focus-visible {
   min-width: 0;
 }
 
+.guide-content {
+  max-width: 980px;
+}
+
 .article-block {
   margin-bottom: 42px;
 }

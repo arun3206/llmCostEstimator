@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import SiteHeader from "@/components/blog/SiteHeader";
@@ -85,7 +86,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
       <article>
         <section className="section seo-intro article-intro">
           <div className="container article-container">
-            <Link className="text-link" href="/blog">
+            <Link className="text-link" href={"/blog" as Route}>
               Blog
             </Link>
             <span className="eyebrow">{post.category}</span>
@@ -177,7 +178,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
                 <h2>Related Guides</h2>
                 <div className="related-list">
                   {relatedPosts.map((relatedPost) => (
-                    <Link href={`/blog/${relatedPost.slug}`} key={relatedPost.slug}>
+                    <Link href={`/blog/${relatedPost.slug}` as Route} key={relatedPost.slug}>
                       {relatedPost.title}
                     </Link>
                   ))}

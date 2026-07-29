@@ -1,5 +1,7 @@
 import CostCalculator from "@/components/calculator/CostCalculator";
 import { MODEL_PRICING } from "@/data/modelPricing";
+import { seoPages } from "@/data/seoPages";
+import type { Route } from "next";
 import Link from "next/link";
 
 const faqs = [
@@ -49,6 +51,7 @@ export default function Home() {
       <Header />
       <CostCalculator />
       <UseCases />
+      <MoreCalculators />
       <HowItWorks />
       <Methodology updatedAt={updatedAt} />
       <FAQ />
@@ -57,12 +60,52 @@ export default function Home() {
   );
 }
 
+function MoreCalculators() {
+  const calculatorLinks = seoPages
+    .filter((page) =>
+      [
+        "rag-cost-calculator",
+        "customer-support-ai-cost-calculator",
+        "meeting-summary-cost-calculator",
+        "document-summarization-cost-calculator",
+        "ai-agent-cost-calculator",
+        "llm-token-calculator",
+        "gpt-api-cost-calculator",
+        "cost-per-1000-ai-chatbot-messages",
+        "cached-input-pricing-calculator",
+        "openai-vs-claude-vs-gemini-cost-comparison",
+      ].includes(page.slug),
+    );
+
+  return (
+    <section className="section" id="more-calculators">
+      <div className="container">
+        <div className="section-heading">
+          <h2>More AI Cost Calculators</h2>
+          <p className="lead">
+            Open a focused calculator guide for RAG, chatbots, support automation, document summaries and AI agents.
+          </p>
+        </div>
+        <div className="cards-grid">
+          {calculatorLinks.map((page) => (
+            <Link className="use-card" href={`/${page.slug}` as Route} key={page.slug}>
+              <span className="chip">Calculator + guide</span>
+              <h3>{page.title}</h3>
+              <p>{page.intro}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Header() {
   return (
     <header className="header"><div className="container header-inner">
       <a className="brand" href="#"><span className="brand-mark">AI</span>LLM Cost Estimator</a>
       <nav className="nav" aria-label="Main navigation">
-        <a href="#calculator">Calculator</a><a href="#compare">Compare Models</a><a href="#use-cases">Use Cases</a><Link href="/blog">Blog</Link><a href="#methodology">Methodology</a>
+        <a href="#calculator">Calculator</a><a href="#compare">Compare Models</a><a href="#use-cases">Use Cases</a><Link href={"/blog" as Route}>Blog</Link><a href="#methodology">Methodology</a>
       </nav>
       <div className="header-actions"><span className="chip">USD / INR</span><a className="button primary" href="#calculator">Start Calculating</a></div>
     </div></header>
@@ -122,7 +165,7 @@ function Footer() {
     <footer className="footer"><div className="container footer-grid">
       <div><h3>LLM Cost Estimator</h3><p className="helper">Plan and compare AI summarization costs. Built by ElvaMind.</p><p className="fine-print">Pricing data is for estimation and may differ from provider invoices.</p></div>
       <div><h3>Tools</h3><ul><li>Summarization Calculator</li><li>Token Estimate</li><li>Model Comparison</li></ul></div>
-      <div><h3>Resources</h3><ul><li><Link href="/blog">LLM Cost Blog</Link></li><li><Link href="/blog/how-to-estimate-openai-api-cost">OpenAI API Cost Guide</Link></li><li><Link href="/blog/ai-chatbot-cost-per-month">Chatbot Cost Guide</Link></li><li><a href="/openai-cost-calculator">OpenAI Cost Calculator</a></li><li><a href="/claude-cost-calculator">Claude Cost Calculator</a></li><li><a href="/gemini-cost-calculator">Gemini Cost Calculator</a></li></ul></div>
+      <div><h3>Resources</h3><ul><li><Link href={"/blog" as Route}>LLM Cost Blog</Link></li><li><Link href={"/rag-cost-calculator" as Route}>RAG Cost Calculator</Link></li><li><Link href={"/customer-support-ai-cost-calculator" as Route}>Support AI Cost</Link></li><li><Link href={"/document-summarization-cost-calculator" as Route}>Document Summary Cost</Link></li><li><Link href="/openai-cost-calculator">OpenAI Cost Calculator</Link></li><li><Link href="/claude-cost-calculator">Claude Cost Calculator</Link></li><li><Link href="/gemini-cost-calculator">Gemini Cost Calculator</Link></li></ul></div>
       <div><h3>Company</h3><ul><li>About</li><li>Contact</li><li>ElvaMind</li></ul></div>
     </div></footer>
   );

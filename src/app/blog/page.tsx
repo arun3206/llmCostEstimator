@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Route } from "next";
 import Link from "next/link";
 import SiteHeader from "@/components/blog/SiteHeader";
 import { blogPosts } from "@/data/blogPosts";
@@ -61,7 +62,7 @@ export default function BlogIndexPage() {
 
       <section className="section">
         <div className="container">
-          <Link className="featured-post" href={`/blog/${featuredPost.slug}`}>
+          <Link className="featured-post" href={`/blog/${featuredPost.slug}` as Route}>
             <span className="chip">{featuredPost.category}</span>
             <h2>{featuredPost.title}</h2>
             <p>{featuredPost.excerpt}</p>
@@ -70,7 +71,7 @@ export default function BlogIndexPage() {
 
           <div className="blog-grid">
             {remainingPosts.map((post) => (
-              <Link className="blog-card" href={`/blog/${post.slug}`} key={post.slug}>
+              <Link className="blog-card" href={`/blog/${post.slug}` as Route} key={post.slug}>
                 <span className="chip">{post.category}</span>
                 <h2>{post.title}</h2>
                 <p>{post.excerpt}</p>

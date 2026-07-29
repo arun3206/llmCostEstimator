@@ -1,15 +1,7 @@
 import CostCalculator from "@/components/calculator/CostCalculator";
-import type { SeoPage } from "@/data/seoPages";
+import { seoPages, type SeoPage } from "@/data/seoPages";
 import type { Route } from "next";
 import Link from "next/link";
-
-const relatedLinks: Array<[string, Route]> = [
-  ["OpenAI Cost Calculator", "/openai-cost-calculator" as Route],
-  ["Claude Cost Calculator", "/claude-cost-calculator" as Route],
-  ["Gemini Cost Calculator", "/gemini-cost-calculator" as Route],
-  ["AI Summarization Cost Calculator", "/ai-summarization-cost-calculator" as Route],
-  ["Chatbot Cost Calculator", "/chatbot-cost-calculator" as Route],
-];
 
 const routes = {
   home: "/" as Route,
@@ -30,14 +22,38 @@ export default function LongTailPage({ page }: { page: SeoPage }) {
       acceptedAnswer: { "@type": "Answer", text: answer },
     })),
   };
+  const pageUrl = `https://llmcostestimator.com/${page.slug}`;
+  const webPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: page.title,
+    url: pageUrl,
+    description: page.description,
+    mainEntity: {
+      "@type": "SoftwareApplication",
+      name: page.title,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+    },
+  };
+  const relatedLinks = seoPages
+    .filter((item) => item.slug !== page.slug)
+    .slice(0, 6)
+    .map((item) => [item.title, `/${item.slug}` as Route] as const);
 
   return (
     <main className="page-shell">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }} />
       <header className="header"><div className="container header-inner">
         <Link className="brand" href={routes.home}><span className="brand-mark">AI</span>LLM Cost Estimator</Link>
         <nav className="nav" aria-label="Main navigation">
-          <Link href="/#calculator">Calculator</Link><Link href="/#compare">Compare Models</Link><Link href="/#use-cases">Use Cases</Link><Link href="/blog">Blog</Link><Link href="/#methodology">Methodology</Link>
+          <Link href="/#calculator">Calculator</Link><Link href="/#compare">Compare Models</Link><Link href="/#use-cases">Use Cases</Link><Link href={"/blog" as Route}>Blog</Link><Link href="/#methodology">Methodology</Link>
         </nav>
         <div className="header-actions"><span className="chip">USD / INR</span><a className="button primary" href="#calculator">Start Calculating</a></div>
       </div></header>
@@ -58,6 +74,43 @@ export default function LongTailPage({ page }: { page: SeoPage }) {
         initialWorkloadType={page.workloadType}
         initialOutputType={page.outputType}
       />
+
+      {page.guideSections?.length ? (
+        <section className="section">
+          <div className="container article-content guide-content">
+            {page.guideSections.map((section) => (
+              <section className="article-block" key={section.heading}>
+                <h2>{section.heading}</h2>
+                {section.body.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+                {section.table ? (
+                  <div className="article-table-wrap">
+                    <table className="article-table">
+                      <thead>
+                        <tr>
+                          {section.table.columns.map((column) => (
+                            <th key={column}>{column}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {section.table.rows.map((row) => (
+                          <tr key={row.join("|")}>
+                            {row.map((cell) => (
+                              <td key={cell}>{cell}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+              </section>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="section soft">
         <div className="container">
@@ -94,7 +147,7 @@ export default function LongTailPage({ page }: { page: SeoPage }) {
         <div><h3>LLM Cost Estimator</h3><p className="helper">Plan and compare AI API costs. Built by ElvaMind.</p><p className="fine-print">Pricing data is for estimation and may differ from provider invoices.</p></div>
         <div><h3>Tools</h3><ul><li><Link href={routes.home}>Main Calculator</Link></li><li><Link href={routes.summarization}>Summarization Cost</Link></li><li><Link href={routes.chatbot}>Chatbot Cost</Link></li></ul></div>
         <div><h3>Providers</h3><ul><li><Link href={routes.openai}>OpenAI</Link></li><li><Link href={routes.claude}>Claude</Link></li><li><Link href={routes.gemini}>Gemini</Link></li></ul></div>
-        <div><h3>Resources</h3><ul><li><Link href="/blog">LLM Cost Blog</Link></li><li><Link href="/blog/llm-token-pricing-explained">Token Pricing Guide</Link></li><li><Link href="/blog/reduce-llm-api-costs">Reduce LLM Costs</Link></li></ul></div>
+        <div><h3>Resources</h3><ul><li><Link href={"/blog" as Route}>LLM Cost Blog</Link></li><li><Link href={"/rag-cost-calculator" as Route}>RAG Cost Calculator</Link></li><li><Link href={"/customer-support-ai-cost-calculator" as Route}>Support AI Cost</Link></li><li><Link href={"/blog/reduce-llm-api-costs" as Route}>Reduce LLM Costs</Link></li></ul></div>
       </div></footer>
     </main>
   );
