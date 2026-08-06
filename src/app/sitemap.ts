@@ -17,7 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...seoPages.map((page) => ({
       url: `${baseUrl}/${page.slug}`,
-      lastModified,
+      lastModified: new Date(page.updatedAt ?? "2026-07-29"),
       changeFrequency: "weekly" as const,
       priority: 0.85,
     })),

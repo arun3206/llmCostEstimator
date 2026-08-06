@@ -29,6 +29,7 @@ export default function LongTailPage({ page }: { page: SeoPage }) {
     name: page.title,
     url: pageUrl,
     description: page.description,
+    ...(page.updatedAt ? { dateModified: page.updatedAt } : {}),
     mainEntity: {
       "@type": "SoftwareApplication",
       name: page.title,
@@ -108,6 +109,23 @@ export default function LongTailPage({ page }: { page: SeoPage }) {
                 ) : null}
               </section>
             ))}
+            {page.sources?.length ? (
+              <section className="article-block">
+                <h2>Official Pricing Sources</h2>
+                <p>
+                  Provider prices and billing rules can change. Verify the current rates and special pricing conditions before committing a production budget.
+                </p>
+                <ul className="source-list">
+                  {page.sources.map((source) => (
+                    <li key={source.href}>
+                      <a href={source.href} rel="noreferrer" target="_blank">
+                        {source.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </div>
         </section>
       ) : null}

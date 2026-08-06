@@ -6,6 +6,7 @@ export type SeoPage = {
   title: string;
   metaTitle: string;
   description: string;
+  updatedAt?: string;
   eyebrow: string;
   intro: string;
   provider?: Provider;
@@ -19,6 +20,10 @@ export type SeoPage = {
       rows: string[][];
     };
   }>;
+  sources?: Array<{
+    label: string;
+    href: string;
+  }>;
   faqs: Array<[string, string]>;
 };
 
@@ -29,16 +34,54 @@ export const seoPages: SeoPage[] = [
     metaTitle: "OpenAI Cost Calculator - Estimate GPT API Costs",
     description:
       "Estimate GPT API costs for prompts, summaries, chatbots and AI workflows. Compare OpenAI pricing against Claude, Gemini and DeepSeek models.",
+    updatedAt: "2026-08-06",
     eyebrow: "GPT API pricing",
     intro:
       "Use this OpenAI cost calculator to estimate cost per interaction, monthly spend and token usage for GPT-powered apps before you build.",
     provider: "OpenAI",
     workloadType: "customer-call-chat",
     outputType: "summary-insights",
+    guideSections: [
+      {
+        heading: "What drives OpenAI API cost",
+        body: [
+          "An OpenAI API request can include system instructions, the user's message, retrieved documents, tool definitions and conversation history. All of that becomes input context. The generated answer becomes output, which is usually priced separately from input.",
+          "For a realistic estimate, use a production-sized prompt rather than a short test message. Include the history and retrieved context your application normally sends, then model retries or multi-step calls as additional interactions.",
+        ],
+        table: {
+          columns: ["OpenAI workload", "Tokens to include", "Common budgeting mistake"],
+          rows: [
+            ["Support chatbot", "Instructions, message history and reply", "Estimating only the newest user message"],
+            ["Document summary", "Extracted document text and summary", "Leaving out repeated formatting instructions"],
+            ["Tool-using workflow", "Tool schemas, tool results and final answer", "Counting one request when the workflow makes several"],
+          ],
+        },
+      },
+      {
+        heading: "Choose the right OpenAI model tier",
+        body: [
+          "Use the same representative workload when comparing GPT models. A smaller model can materially reduce monthly spend for classification, extraction and short answers, while a more capable model may be justified for complex reasoning or high-value outputs.",
+          "Cached input can lower the cost of repeated instructions when the selected model supports it. This calculator shows cached-input pricing separately, but batch, priority, regional and tool-specific charges should be verified against the official OpenAI documentation.",
+        ],
+        table: {
+          columns: ["Model tier", "Good starting point for", "Cost consideration"],
+          rows: [
+            ["Flagship GPT", "Complex analysis and high-value reasoning", "Highest cost; validate quality gains with an evaluation set"],
+            ["GPT mini", "Chatbots, summaries and routine workflows", "Balanced option for repeated production traffic"],
+            ["GPT nano", "Classification, routing and simple extraction", "Lowest cost when the task is narrow and testable"],
+          ],
+        },
+      },
+    ],
+    sources: [
+      { label: "OpenAI model and API documentation", href: "https://developers.openai.com/api/docs/models" },
+    ],
     faqs: [
       ["How do I estimate OpenAI API cost?", "Paste a representative prompt, transcript or content sample, then enter expected monthly interactions. The calculator estimates input tokens, output tokens and monthly cost."],
       ["Does this call the OpenAI API?", "No. The MVP runs locally in your browser and does not require an API key."],
       ["Can I compare OpenAI with other models?", "Yes. The comparison table uses the same workload across supported OpenAI, Anthropic, Google and DeepSeek models."],
+      ["How should I estimate cached OpenAI input?", "Count only stable prompt content that is repeatedly reused and supported by the selected model's caching rules. Unique user content should remain standard input."],
+      ["Does the estimate include OpenAI Batch API discounts?", "No. The default comparison uses standard text-token pricing. Verify batch, priority and other specialized rates in the official OpenAI documentation."],
     ],
   },
   {
@@ -47,16 +90,54 @@ export const seoPages: SeoPage[] = [
     metaTitle: "Claude Cost Calculator - Estimate Anthropic API Costs",
     description:
       "Estimate Claude API costs for summarization, support transcripts, documents and AI workflows. Compare Anthropic pricing with OpenAI, Gemini and DeepSeek.",
+    updatedAt: "2026-08-06",
     eyebrow: "Anthropic API pricing",
     intro:
       "Use this Claude cost calculator to plan Anthropic API spend for summaries, insights and detailed analysis workloads.",
     provider: "Anthropic",
     workloadType: "meeting-summary",
     outputType: "detailed-summary",
+    guideSections: [
+      {
+        heading: "Estimate Claude cost for long-context work",
+        body: [
+          "Claude workloads often include long documents, conversation history, policy text or tool results. The full context sent on every request contributes to input usage, even when only a small part of it is new.",
+          "Paste a representative document or conversation into the calculator and include recurring system instructions. For multi-step agents, estimate the average tokens at each step because later calls may contain accumulated context from earlier steps.",
+        ],
+        table: {
+          columns: ["Claude workload", "Primary cost driver", "More reliable estimate"],
+          rows: [
+            ["Contract or report analysis", "Large document input", "Use a typical full document, not the shortest example"],
+            ["Meeting intelligence", "Transcript plus detailed output", "Include decisions, actions and follow-up fields"],
+            ["Agent workflow", "Repeated context and tool results", "Multiply by average model calls per completed task"],
+          ],
+        },
+      },
+      {
+        heading: "Compare Claude model tiers for the same task",
+        body: [
+          "Claude model tiers serve different workload profiles. Haiku is a useful baseline for high-volume, well-defined tasks; Sonnet is a balanced starting point for analysis and coding; Opus is intended for the most demanding work where output quality can justify higher cost.",
+          "Prompt caching may reduce repeated-input cost when stable content meets Anthropic's requirements. Treat cache savings as a scenario rather than an assumption, and compare the cached and uncached totals before setting a production budget.",
+        ],
+        table: {
+          columns: ["Claude tier", "Typical fit", "What to validate"],
+          rows: [
+            ["Haiku", "Classification, extraction and short responses", "Accuracy on edge cases at production volume"],
+            ["Sonnet", "Coding, analysis and customer-facing assistants", "Quality versus latency and monthly spend"],
+            ["Opus", "Complex reasoning and high-value research", "Whether the quality gain offsets the higher unit cost"],
+          ],
+        },
+      },
+    ],
+    sources: [
+      { label: "Anthropic Claude models and pricing documentation", href: "https://platform.claude.com/docs/en/about-claude/models/overview" },
+    ],
     faqs: [
       ["What can I estimate on this Claude calculator?", "You can estimate cost per interaction, monthly cost, annual cost and token usage for Claude-style summarization workloads."],
       ["Are Claude token counts exact?", "The MVP labels token counts as estimated because providers can tokenize content differently."],
       ["Can I compare Claude with GPT or Gemini?", "Yes. Use the model comparison section to compare the same workload across providers."],
+      ["How does prompt caching affect Claude cost?", "Eligible repeated prompt content can be billed differently from standard input. Estimate only the stable portion as cached and verify the current rules with Anthropic."],
+      ["How should I budget for a Claude agent?", "Estimate input and output for each model call, multiply by the average calls per task, then scale by monthly task volume and expected retries."],
     ],
   },
   {
@@ -65,16 +146,54 @@ export const seoPages: SeoPage[] = [
     metaTitle: "Gemini Cost Calculator - Estimate Google AI API Costs",
     description:
       "Estimate Gemini API costs for prompts, summaries, support content and AI products. Compare Google model pricing across common workloads.",
+    updatedAt: "2026-08-06",
     eyebrow: "Google AI pricing",
     intro:
       "Use this Gemini cost calculator to estimate Google AI API spend from a real content sample and monthly usage volume.",
     provider: "Google",
     workloadType: "customer-call-chat",
     outputType: "summary",
+    guideSections: [
+      {
+        heading: "Model Gemini input and output separately",
+        body: [
+          "A Gemini request may combine instructions, chat history, retrieved context and the current user message. Generated text is billed as output, while large prompts and long conversation histories increase input usage.",
+          "Start with a representative request from the real application. Compare Pro, Flash and Flash-Lite options using identical token counts so model choice, rather than a changing prompt, explains the cost difference.",
+        ],
+        table: {
+          columns: ["Gemini tier", "Useful starting point for", "Planning question"],
+          rows: [
+            ["Pro", "Complex reasoning and long-context analysis", "Does measured quality justify the higher unit cost?"],
+            ["Flash", "Interactive assistants and scalable summarization", "Is the latency and quality balance suitable for users?"],
+            ["Flash-Lite", "High-volume extraction and simple automation", "Does it meet accuracy requirements on difficult examples?"],
+          ],
+        },
+      },
+      {
+        heading: "Account for Gemini long-context and multimodal usage",
+        body: [
+          "Long prompts can have different pricing rules or thresholds, so a small test prompt may not represent document-heavy production traffic. Use manual token inputs when your application already records actual Gemini usage.",
+          "This calculator focuses on text-token estimates. Image, audio, video, grounding and other service-specific charges can follow different units and should be checked on the official Gemini pricing page before finalizing a budget.",
+        ],
+        table: {
+          columns: ["Workload", "Include in this estimate", "Check separately"],
+          rows: [
+            ["Text chatbot", "Instructions, history and generated reply", "Grounding or external service charges"],
+            ["Document analysis", "Extracted text and generated findings", "Long-context pricing thresholds"],
+            ["Multimodal assistant", "Any text context and text response", "Image, audio and video token rules"],
+          ],
+        },
+      },
+    ],
+    sources: [
+      { label: "Google Gemini API pricing", href: "https://ai.google.dev/gemini-api/docs/pricing" },
+    ],
     faqs: [
       ["How do I calculate Gemini API cost?", "Paste sample content, choose a summary type and enter monthly interactions. The calculator applies model input and output pricing."],
       ["Does this include Google Cloud infrastructure cost?", "No. This MVP estimates only model token costs, not storage, databases, transcription or cloud infrastructure."],
       ["Can I use this for Gemini chatbot estimates?", "Yes. Use a representative chat or prompt sample and set monthly interactions to your expected message volume."],
+      ["Does this calculator include Gemini image or audio cost?", "No. It estimates text-token cost. Verify current image, audio, video and grounding charges on Google's official pricing page."],
+      ["Which Gemini tier should I test first?", "Flash is a practical comparison baseline for many interactive workloads, while Pro and Flash-Lite help test the quality-versus-cost range."],
     ],
   },
   {
@@ -83,15 +202,55 @@ export const seoPages: SeoPage[] = [
     metaTitle: "AI Summarization Cost Calculator - Estimate Monthly LLM Spend",
     description:
       "Estimate the cost of AI summarization for calls, chats, meetings, transcripts and documents across leading LLM providers.",
+    updatedAt: "2026-08-06",
     eyebrow: "Summarization workload pricing",
     intro:
       "Use this AI summarization cost calculator to plan monthly spend for customer conversations, meeting notes, documents and transcript summaries.",
     workloadType: "customer-call-chat",
     outputType: "summary-insights",
+    guideSections: [
+      {
+        heading: "Break summarization cost into input and output",
+        body: [
+          "AI summarization cost starts with the source material sent to the model: a call transcript, chat, meeting, report or document. The requested summary, decisions, sentiment, action items and structured fields become output tokens.",
+          "A concise summary and a detailed analysis should not use the same output assumption. Test each format with representative content, then use the calculator's monthly interaction volume to compare cost per item, monthly spend and annual spend.",
+        ],
+        table: {
+          columns: ["Summary workload", "Input to measure", "Output to budget"],
+          rows: [
+            ["Customer call", "Speaker transcript and recurring instructions", "Summary, sentiment and next actions"],
+            ["Meeting notes", "Full transcript and meeting metadata", "Decisions, owners, risks and follow-ups"],
+            ["Business document", "Extracted document text", "Executive summary and requested structured fields"],
+          ],
+        },
+      },
+      {
+        heading: "Use representative samples for monthly planning",
+        body: [
+          "Summary workloads usually vary in length, so one unusually short sample can understate the budget. Estimate a typical item and a long-item scenario, then compare both at expected monthly volume.",
+          "The calculator covers LLM processing only. Add speech-to-text, OCR, storage, retrieval, quality review and retry costs separately when they exist in the production pipeline. Chunking can help fit long inputs but may introduce additional model calls and a final synthesis step.",
+        ],
+        table: {
+          columns: ["Planning scenario", "How to model it", "Why it matters"],
+          rows: [
+            ["Typical month", "Average source length times normal volume", "Establishes the working budget"],
+            ["Peak month", "Longer content and higher interaction volume", "Tests budget headroom"],
+            ["Chunked input", "Chunk summaries plus final synthesis", "Captures extra requests for long content"],
+          ],
+        },
+      },
+    ],
+    sources: [
+      { label: "OpenAI model documentation", href: "https://developers.openai.com/api/docs/models" },
+      { label: "Anthropic Claude model documentation", href: "https://platform.claude.com/docs/en/about-claude/models/overview" },
+      { label: "Google Gemini API pricing", href: "https://ai.google.dev/gemini-api/docs/pricing" },
+    ],
     faqs: [
       ["What inputs affect summarization cost?", "Input length, summary detail, selected model, system instruction tokens, caching and monthly interaction volume all affect cost."],
       ["Does this include speech-to-text cost?", "No. Speech-to-text transcription is not included yet; this calculator focuses on LLM summarization cost."],
       ["Can I use one transcript as a sample?", "Yes. Paste a representative transcript and scale it by monthly interactions to estimate total spend."],
+      ["How should I estimate chunked document summaries?", "Count each chunk-level model call and the final synthesis call. Long content can cost more than a single prompt because several requests are involved."],
+      ["Should I estimate an average or worst-case summary?", "Estimate both. The average supports routine budgeting, while a long-input or detailed-output scenario shows how much headroom the system needs."],
     ],
   },
   {
@@ -100,15 +259,57 @@ export const seoPages: SeoPage[] = [
     metaTitle: "Chatbot Cost Calculator - Estimate AI Chat API Costs",
     description:
       "Estimate AI chatbot API costs from prompt size, expected response length and monthly message volume across popular LLM models.",
+    updatedAt: "2026-08-06",
     eyebrow: "AI chatbot pricing",
     intro:
       "Use this chatbot cost calculator to estimate per-message cost and monthly API spend for AI chatbots and support assistants.",
     workloadType: "ai-chatbot",
     outputType: "summary-insights",
+    guideSections: [
+      {
+        heading: "Chatbot cost grows with conversation context",
+        body: [
+          "A chatbot request usually sends more than the latest user message. System instructions, previous turns, retrieved knowledge and tool definitions can be included again on every model call, causing input usage to grow as the conversation continues.",
+          "Estimate an early turn and a later turn separately. A realistic monthly budget should reflect the average number of model calls per conversation, not only registered users or opened chat sessions.",
+        ],
+        table: {
+          columns: ["Chatbot component", "When it is charged", "Optimization lever"],
+          rows: [
+            ["System instructions", "Usually sent with every request", "Shorten or cache stable instructions"],
+            ["Conversation history", "Grows across turns", "Summarize or trim older messages"],
+            ["RAG context", "Added when knowledge is retrieved", "Return fewer, more relevant chunks"],
+            ["Assistant response", "Generated on every model call", "Set an appropriate output limit"],
+          ],
+        },
+      },
+      {
+        heading: "Translate message cost into chatbot unit economics",
+        body: [
+          "Cost per message is useful for engineering, while cost per 1,000 messages and cost per resolved conversation are easier to use for product pricing and capacity planning. Compare all models with the same context and response assumptions.",
+          "Retries, moderation, routing, agent handoffs and multi-model workflows can add requests that are invisible in a simple one-message estimate. Add those calls to the expected monthly interaction count or model them as separate scenarios.",
+        ],
+        table: {
+          columns: ["Business metric", "Calculation", "Best use"],
+          rows: [
+            ["Cost per message", "One request input plus output", "Model and prompt comparison"],
+            ["Cost per conversation", "Average request cost times turns", "Support and sales planning"],
+            ["Cost per 1,000 messages", "Per-message cost times 1,000", "Pricing plans and gross-margin estimates"],
+            ["Monthly chatbot cost", "All model calls at monthly volume", "Budgeting and model routing decisions"],
+          ],
+        },
+      },
+    ],
+    sources: [
+      { label: "OpenAI model documentation", href: "https://developers.openai.com/api/docs/models" },
+      { label: "Anthropic Claude model documentation", href: "https://platform.claude.com/docs/en/about-claude/models/overview" },
+      { label: "Google Gemini API pricing", href: "https://ai.google.dev/gemini-api/docs/pricing" },
+    ],
     faqs: [
       ["How do I estimate chatbot API cost?", "Paste a representative chat prompt or conversation context, choose expected output length and enter monthly message volume."],
       ["Why do chatbot costs vary?", "Costs change with context size, response length, model choice, cached prompts and conversation volume."],
       ["Can I compare chatbot costs across models?", "Yes. The comparison table estimates the same workload across the supported providers."],
+      ["Should chatbot volume mean users, conversations or messages?", "Use model requests or messages for the most direct estimate. Convert users to requests using average conversations per user and turns per conversation."],
+      ["How does RAG change chatbot cost?", "Retrieved document chunks increase input tokens. Estimate the typical retrieved context alongside chat history and system instructions."],
     ],
   },
   {
